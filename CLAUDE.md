@@ -19,35 +19,33 @@ Release process (`RELEASING.md` + `/release` command) lands in **Phase 07**.
 
 ---
 
-## Architecture — MVVM layering
+## Architecture — Layered architecture
 
-The bot separates concerns in an MVVM-inspired layout. Keep these layers honest — don't let Telegram primitives leak into services, and don't let services be imported from views.
+The bot uses a simple layered architecture guided by SOLID principles and dependency injection. Keep layers honest — don't let Telegram primitives leak into services, and don't let services call back up into handlers.
 
 ```
 src/wallet_bot/
-├── main.py              # app entrypoint (webhook handler, DI wiring)
+├── main.py              # FastAPI app, DI wiring, routes
 ├── config.py            # pydantic-settings, reads env → Secret Manager in prod
-├── models/              # M — pure domain data (no I/O, no framework)
-├── services/            # external integrations (vision, barcode, wallet, telegram client)
-├── viewmodels/          # VM — orchestrators; one per telegram interaction
-└── views/               # V — formats telegram replies (text, inline keyboards)
+├── models/              # Pure domain data (no I/O, no framework types)
+├── services/            # External integrations (Telegram Bot, Claude Vision, Wallet API)
+└── handlers/            # Request handlers — one per Telegram update type; thin orchestration
 ```
 
 | Layer | Knows about | Does NOT know about |
 |---|---|---|
 | **Models** | Python types only | Telegram, HTTP, anything external |
-| **Services** | External APIs, models | Telegram update shape, views, viewmodels |
-| **ViewModels** | Models, services | Telegram reply formatting, HTTP |
-| **Views** | Models, viewmodel output | Services, external APIs |
-| **main.py** | Telegram updates, viewmodels, views | Nothing from inside viewmodels/services internals |
+| **Services** | External APIs, models | Telegram update shape, handlers |
+| **Handlers** | Models, services | FastAPI internals, HTTP response details |
+| **main.py** | FastAPI routes, handlers, DI wiring | Handler or service internals |
 
 **Flow for a photo update:**
-1. `main.py` verifies webhook, parses the update, checks the whitelist.
-2. Routes photo → `viewmodels/photo_viewmodel.py`.
-3. ViewModel calls `services/vision`, `services/barcode`, `services/wallet` and returns a view-model object (e.g. `TicketPassReady(event_name, save_url, barcode_payload)` or `TicketPassError(reason)`).
-4. `views/photo_view.py` turns that into a Telegram message (text + inline URL button) and `main.py` sends it.
+1. `main.py` verifies webhook secret, parses the update, checks the whitelist.
+2. Routes photo → `handlers/photo_handler.py`.
+3. Handler calls the relevant services (vision, barcode, wallet) and returns a domain result (e.g. `TicketPassReady(event_name, save_url, barcode_payload)` or `TicketPassError(reason)`).
+4. Handler formats and sends the Telegram reply via `services/telegram_client.py`.
 
-Each viewmodel must be unit-testable with only fake services — no Telegram instance required.
+Each handler must be unit-testable with only fake services — no live Telegram instance required.
 
 ---
 
@@ -59,11 +57,11 @@ Each viewmodel must be unit-testable with only fake services — no Telegram ins
 - **Async-first** for all I/O (Telegram, Anthropic, Wallet API). Sync code only for pure computation.
 - **Dependency injection** via constructor args or `main.py` wiring. No module-level singletons holding clients.
 - **No secrets in code** — all via `config.py` → env → Google Secret Manager in prod. See `.env.example`.
-- **Error handling**: no bare `except:`. Catch only what the layer handles; surface user-facing errors from viewmodels, not services.
+- **Error handling**: no bare `except:`. Catch only what the layer handles; surface user-facing errors from handlers, not services.
 - **Logging**: structured JSON, one line per event (Phase 6 onward). Never log raw tokens or barcode payloads at INFO+.
 - **Tests**: `tests/unit/` mirrors `src/` layout. Services get integration tests with mocked HTTP. Target ≥80% coverage from Phase 2.
 - **Commits**: conventional style (`feat:`, `fix:`, `chore:`, `docs:`, `test:`). One logical change per commit.
-- **Small files**: if a module approaches ~300 lines, it's doing too much — split by MVVM layer first.
+- **Small files**: if a module approaches ~300 lines, it's doing too much — split by layer first.
 - **No premature abstraction**: three similar lines is fine. Abstract on the fourth, not the second.
 
 ---
