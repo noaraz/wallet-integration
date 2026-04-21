@@ -1,9 +1,13 @@
-"""Smoke test — scaffold sanity check. Phases replace with real tests."""
+"""Smoke test — verifies the healthz endpoint responds."""
 
 from __future__ import annotations
 
-from wallet_bot.main import healthz
+import pytest
 
 
-def test_healthz_returns_ok() -> None:
-    assert healthz() == {"status": "ok"}
+@pytest.mark.asyncio
+async def test_healthz_function_returns_ok():
+    from wallet_bot.main import healthz
+
+    result = await healthz()
+    assert result == {"status": "ok"}

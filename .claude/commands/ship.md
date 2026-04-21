@@ -121,11 +121,10 @@ Return the PR URL to the user.
 
 ## 7. Code review on the PR
 
-Invoke the project reviewer agent:
+Invoke the skill:
 
 ```
-Agent tool: subagent_type="reviewer"
-Prompt: "Review this PR: <URL>. Check MVVM layering (no service imports in views, no telegram shapes in services), type hints, error handling, and test coverage on changed files."
+/code-review:code-review
 ```
 
 Present findings to the user and offer to fix them.

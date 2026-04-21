@@ -1,7 +1,7 @@
 """Services — external integrations.
 
 Each service encapsulates one external dependency and exposes a small
-async interface consumable by viewmodels. No Telegram update shapes here.
+async interface consumable by handlers. No Telegram update shapes here.
 
 Planned modules:
     telegram_client  (Phase 1) — sendMessage, downloadFile, setWebhook
