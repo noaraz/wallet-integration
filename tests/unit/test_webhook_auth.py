@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 _SECRET = "test-webhook-secret"
 _ALLOWED_ID = 111222333
 _BLOCKED_ID = 999999999
@@ -32,14 +30,23 @@ _BLOCKED_UPDATE = {
     },
 }
 
+# Update with no `from` field — effective_user will be None
+_NO_USER_UPDATE = {
+    "update_id": 3,
+    "message": {
+        "message_id": 3,
+        "date": 1700000000,
+        "chat": {"id": _ALLOWED_ID, "type": "channel"},
+        "text": "channel post",
+    },
+}
 
-@pytest.mark.asyncio
+
 async def test_missing_secret_header_returns_403(test_app):
     resp = await test_app.post("/telegram/webhook", json=_START_UPDATE)
     assert resp.status_code == 403
 
 
-@pytest.mark.asyncio
 async def test_wrong_secret_returns_403(test_app):
     resp = await test_app.post(
         "/telegram/webhook",
@@ -49,7 +56,6 @@ async def test_wrong_secret_returns_403(test_app):
     assert resp.status_code == 403
 
 
-@pytest.mark.asyncio
 async def test_non_whitelisted_user_returns_403(test_app):
     resp = await test_app.post(
         "/telegram/webhook",
@@ -59,7 +65,6 @@ async def test_non_whitelisted_user_returns_403(test_app):
     assert resp.status_code == 403
 
 
-@pytest.mark.asyncio
 async def test_whitelisted_user_with_valid_secret_returns_200(test_app):
     resp = await test_app.post(
         "/telegram/webhook",
@@ -69,7 +74,16 @@ async def test_whitelisted_user_with_valid_secret_returns_200(test_app):
     assert resp.status_code == 200
 
 
-@pytest.mark.asyncio
+async def test_update_with_no_user_returns_200(test_app):
+    """Updates without effective_user (e.g. channel posts) are silently accepted."""
+    resp = await test_app.post(
+        "/telegram/webhook",
+        json=_NO_USER_UPDATE,
+        headers={"X-Telegram-Bot-Api-Secret-Token": _SECRET},
+    )
+    assert resp.status_code == 200
+
+
 async def test_healthz_is_unauthenticated(test_app):
     resp = await test_app.get("/healthz")
     assert resp.status_code == 200

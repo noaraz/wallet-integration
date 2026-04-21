@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hmac
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -37,6 +38,21 @@ async def healthz() -> dict[str, str]:
     return {"status": "ok"}
 
 
+async def _dispatch(
+    cmd: str | None,
+    has_photo: bool,
+    chat_id: int,
+    client: TelegramClientProtocol,
+) -> None:
+    """Route a parsed update to the appropriate handler."""
+    if cmd == "/start":
+        await handle_start(chat_id, client)
+    elif cmd == "/help":
+        await handle_help(chat_id, client)
+    elif has_photo:
+        await handle_photo(chat_id, client)
+
+
 @app.post("/telegram/webhook", status_code=200)
 async def webhook(
     request: Request,
@@ -44,7 +60,9 @@ async def webhook(
     settings: Settings = Depends(get_settings),
     client: TelegramClientProtocol = Depends(get_client),
 ) -> dict[str, str]:
-    if x_telegram_bot_api_secret_token != settings.webhook_secret.get_secret_value():
+    expected = settings.webhook_secret.get_secret_value()
+    received = x_telegram_bot_api_secret_token or ""
+    if not hmac.compare_digest(received, expected):
         raise HTTPException(status_code=403)
 
     body = await request.json()
@@ -61,14 +79,15 @@ async def webhook(
     if msg is None:
         return {"ok": "true"}
 
+    if update.effective_chat is None:
+        return {"ok": "true"}
+
+    chat_id = update.effective_chat.id
+
     # Strip @botname suffix so `/start@walletbot` matches `/start`.
     parts = msg.text.split() if msg.text else []
     cmd = parts[0].split("@")[0] if parts else None
-    if cmd == "/start":
-        await handle_start(update, client)
-    elif cmd == "/help":
-        await handle_help(update, client)
-    elif msg.photo:
-        await handle_photo(update, client)
+
+    await _dispatch(cmd, bool(msg.photo), chat_id, client)
 
     return {"ok": "true"}

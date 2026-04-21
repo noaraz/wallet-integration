@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from telegram import Update
-
 from wallet_bot.services.telegram_client import TelegramClientProtocol
 
 _TEXT = (
@@ -14,7 +12,5 @@ _TEXT = (
 )
 
 
-async def handle_help(update: Update, client: TelegramClientProtocol) -> None:
-    if update.effective_chat is None:
-        return
-    await client.send_text(update.effective_chat.id, _TEXT)
+async def handle_help(chat_id: int, client: TelegramClientProtocol) -> None:
+    await client.send_text(chat_id, _TEXT)
