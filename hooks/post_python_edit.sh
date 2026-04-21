@@ -28,7 +28,6 @@ docker image inspect wallet-bot:dev >/dev/null 2>&1 || exit 0
 repo_root=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 rel=${path#"$repo_root/"}
 
-docker compose run --rm --no-TTY bot ruff check --fix --exit-zero "/app/${rel}" >/dev/null 2>&1 || true
-docker compose run --rm --no-TTY bot ruff format "/app/${rel}" >/dev/null 2>&1 || true
+docker compose run --rm --no-TTY bot bash -c "ruff check --fix --exit-zero '/app/${rel}' && ruff format '/app/${rel}'" >/dev/null 2>&1 || true
 
 exit 0
