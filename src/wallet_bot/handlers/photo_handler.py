@@ -10,5 +10,6 @@ _TEXT = "Got it, processing…"
 
 
 async def handle_photo(update: Update, client: TelegramClientProtocol) -> None:
-    assert update.effective_chat is not None
+    if update.effective_chat is None:
+        return
     await client.send_text(update.effective_chat.id, _TEXT)

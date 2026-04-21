@@ -15,5 +15,6 @@ _TEXT = (
 
 
 async def handle_help(update: Update, client: TelegramClientProtocol) -> None:
-    assert update.effective_chat is not None
+    if update.effective_chat is None:
+        return
     await client.send_text(update.effective_chat.id, _TEXT)
