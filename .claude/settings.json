@@ -1,0 +1,51 @@
+{
+  "allowedTools": [
+    "Bash(git log*)",
+    "Bash(git diff*)",
+    "Bash(git blame*)",
+    "Bash(git status*)",
+    "Bash(git branch*)",
+    "Bash(gh pr*)",
+    "Bash(gh run*)",
+    "Bash(gh api*)",
+    "Bash(docker compose build*)",
+    "Bash(docker compose run*)",
+    "Bash(docker compose up*)",
+    "Bash(docker compose down*)",
+    "Bash(docker compose logs*)",
+    "Bash(docker compose ps*)",
+    "Bash(docker build*)",
+    "Bash(gcloud run deploy*)",
+    "Bash(gcloud run services*)",
+    "Bash(gcloud run revisions*)",
+    "Bash(gcloud builds submit*)",
+    "Bash(bash hooks/pre_edit_guard.sh*)",
+    "Bash(bash hooks/post_python_edit.sh*)",
+    "Bash(bash hooks/start.sh*)"
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "bash hooks/start.sh" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "bash hooks/pre_edit_guard.sh" }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "bash hooks/post_python_edit.sh" }
+        ]
+      }
+    ]
+  }
+}

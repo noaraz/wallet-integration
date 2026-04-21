@@ -1,0 +1,40 @@
+[project]
+name = "wallet-bot"
+version = "0.0.0"
+description = "Telegram bot that converts ticket screenshots into Google Wallet passes"
+requires-python = ">=3.12"
+dependencies = [
+    # Runtime deps are added per phase:
+    #   Phase 1: web framework + Telegram client
+    #   Phase 2: Anthropic SDK + image lib
+    #   Phase 3: Python barcode lib
+    #   Phase 4: Google auth lib (JWT signing)
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-cov>=5",
+    "ruff>=0.5",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+addopts = "-ra"
+testpaths = ["tests"]
