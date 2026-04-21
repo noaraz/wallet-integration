@@ -62,7 +62,8 @@ async def webhook(
         return {"ok": "true"}
 
     # Strip @botname suffix so `/start@walletbot` matches `/start`.
-    cmd = msg.text.split("@")[0] if msg.text else None
+    parts = msg.text.split() if msg.text else []
+    cmd = parts[0].split("@")[0] if parts else None
     if cmd == "/start":
         await handle_start(update, client)
     elif cmd == "/help":

@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+# ── base: shared system deps + Python env ─────────────────────────────────────
+FROM python:3.12-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -13,14 +14,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python deps — copy pyproject + (minimal) src so pip can do an editable install.
+# ── dev: editable install with dev extras (used by docker compose) ─────────────
+FROM base AS dev
+
 COPY pyproject.toml ./
 COPY src/ ./src/
 RUN pip install --upgrade pip && pip install -e '.[dev]'
 
-# Cloud Run expects the container to listen on $PORT.
 ENV PORT=8080
 EXPOSE 8080
 
-# Real entrypoint (web server) is wired in Phase 1.
-CMD ["python", "-c", "print('wallet-bot: no entrypoint yet — added in Phase 1')"]
+CMD ["bash"]
+
+# ── prod: non-editable install, no dev extras, minimal attack surface ──────────
+FROM base AS prod
+
+COPY pyproject.toml ./
+COPY src/ ./src/
+RUN pip install --upgrade pip && pip install .
+
+ENV PORT=8080
+EXPOSE 8080
+
+# Cloud Run sets $PORT; uvicorn reads it at startup.
+CMD ["sh", "-c", "uvicorn wallet_bot.main:app --host 0.0.0.0 --port ${PORT}"]

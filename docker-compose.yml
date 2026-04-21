@@ -1,6 +1,8 @@
 services:
   bot:
-    build: .
+    build:
+      context: .
+      target: dev
     image: wallet-bot:dev
     working_dir: /app
     volumes:
