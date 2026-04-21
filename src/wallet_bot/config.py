@@ -6,8 +6,12 @@ from functools import lru_cache
 from typing import Any
 
 from pydantic import SecretStr, field_validator
-from pydantic_settings import BaseSettings, PydanticBaseSettingsSource, SettingsConfigDict
-from pydantic_settings.sources.providers.env import EnvSettingsSource
+from pydantic_settings import (
+    BaseSettings,
+    EnvSettingsSource,
+    PydanticBaseSettingsSource,
+    SettingsConfigDict,
+)
 
 
 def _split_ids(raw: str) -> list[int]:
@@ -58,7 +62,9 @@ class Settings(BaseSettings):
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         return (
             init_settings,
-            _EnvWithCommaIds(settings_cls),
+            _EnvWithCommaIds(
+                settings_cls
+            ),  # replaces default env_settings to intercept list fields
             dotenv_settings,
             file_secret_settings,
         )
