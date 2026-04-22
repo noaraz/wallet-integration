@@ -43,18 +43,42 @@ class TextDumpProtocol(Protocol):
 # --- factories (the single swap point) --------------------------------------
 
 
-def create_default_service(api_key: str) -> VisionServiceProtocol:
-    """Return the default production vision service for the given API key."""
-    from wallet_bot.services.gemini_vision import GeminiVisionService, build_client
+def create_default_service(
+    api_key: str,
+    *,
+    model: str | None = None,
+) -> VisionServiceProtocol:
+    """Return the default production vision service for the given API key.
 
-    return GeminiVisionService(client=build_client(api_key))
+    ``model`` overrides the pinned default (``gemini-2.5-flash``). Use it to
+    ride out model-specific capacity outages without a code push — e.g. set
+    ``GEMINI_MODEL=gemini-flash-latest`` in the deploy env.
+    """
+    from wallet_bot.services.gemini_vision import (
+        GEMINI_DEFAULT_MODEL,
+        GeminiVisionService,
+        build_client,
+    )
+
+    return GeminiVisionService(
+        client=build_client(api_key),
+        model=model or GEMINI_DEFAULT_MODEL,
+    )
 
 
-def create_default_text_dumper(api_key: str) -> TextDumpProtocol:
+def create_default_text_dumper(
+    api_key: str,
+    *,
+    model: str | None = None,
+) -> TextDumpProtocol:
     """Return the default raw-text dumper (used by scripts/eval_ocr.py)."""
     from wallet_bot.services.gemini_vision import (
+        GEMINI_DEFAULT_MODEL,
         GeminiTextDumper,
         build_client,
     )
 
-    return GeminiTextDumper(client=build_client(api_key))
+    return GeminiTextDumper(
+        client=build_client(api_key),
+        model=model or GEMINI_DEFAULT_MODEL,
+    )

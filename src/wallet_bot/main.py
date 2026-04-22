@@ -68,7 +68,10 @@ def get_store(request: Request) -> DraftStore:
 def get_vision(request: Request, settings: Settings) -> VisionServiceProtocol:
     svc = request.app.state.vision_service
     if svc is None:
-        svc = create_default_service(settings.gemini_api_key.get_secret_value())
+        svc = create_default_service(
+            settings.gemini_api_key.get_secret_value(),
+            model=settings.gemini_model,
+        )
         request.app.state.vision_service = svc
     return svc  # type: ignore[no-any-return]
 

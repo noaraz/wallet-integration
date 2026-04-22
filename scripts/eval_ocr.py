@@ -116,8 +116,9 @@ def run_gemini(path: Path) -> str:
     except ImportError as e:
         return f"SKIP: {e} (pip install google-genai)"
 
+    model = os.environ.get("GEMINI_MODEL")  # optional override for outages
     try:
-        dumper = create_default_text_dumper(api_key)
+        dumper = create_default_text_dumper(api_key, model=model)
         return dumper.dump_file(path).strip() or "(no text extracted)"
     except Exception as e:
         return f"ERROR: {e}"

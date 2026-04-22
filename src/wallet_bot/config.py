@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     webhook_secret: SecretStr  # env: WEBHOOK_SECRET
     allowed_tg_user_ids: list[int]  # env: ALLOWED_TG_USER_IDS (comma-separated)
     gemini_api_key: SecretStr  # env: GEMINI_API_KEY (https://aistudio.google.com/app/apikey)
+    gemini_model: str = (
+        "gemini-2.5-flash"  # env: GEMINI_MODEL — override to ride out capacity outages
+    )
 
     @field_validator("allowed_tg_user_ids")
     @classmethod

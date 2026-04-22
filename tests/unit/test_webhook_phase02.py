@@ -73,7 +73,7 @@ def patched_vision(monkeypatch):
     fake.extract = AsyncMock(return_value=ExtractedTicket(event_name="גיא מזיג"))
     monkeypatch.setattr(
         "wallet_bot.main.create_default_service",
-        lambda api_key: fake,
+        lambda *a, **kw: fake,
     )
     return fake
 

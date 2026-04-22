@@ -73,3 +73,16 @@ def test_gemini_api_key_is_secret(monkeypatch):
     # SecretStr repr must not leak the value.
     assert "super-secret-123" not in repr(s)
     assert s.gemini_api_key.get_secret_value() == "super-secret-123"
+
+
+def test_gemini_model_defaults_to_2_5_flash(monkeypatch):
+    _make(monkeypatch)
+    s = Settings(_env_file=None)
+    assert s.gemini_model == "gemini-2.5-flash"
+
+
+def test_gemini_model_override_from_env(monkeypatch):
+    _make(monkeypatch)
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-flash-latest")
+    s = Settings(_env_file=None)
+    assert s.gemini_model == "gemini-flash-latest"
