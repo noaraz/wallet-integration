@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-21 — Phase 01 implementation complete, pending PR + Cloud Run deploy
+Last updated: 2026-04-22 — Phase 02 implementation complete, pending PR + manual/live verification
 
 ## Current Focus
 
-**Phase 01 — Telegram webhook skeleton** — implementation done, Cloud Run deploy + skills deferred to post-PR.
+**Phase 02 — Vision extraction (Gemini-only, interactive edit)** — all unit tests green (105 passing), lint clean. Pending: `.env.example` manual edit, live integration test with a real `GEMINI_API_KEY`, end-to-end manual test via ngrok, PR.
 
 ---
 
@@ -14,7 +14,7 @@ Last updated: 2026-04-21 — Phase 01 implementation complete, pending PR + Clou
 |---|---|---|
 | 00 | Scaffold | ✅ done |
 | 01 | Telegram webhook | 🔄 in PR |
-| 02 | Vision extraction | ⬜ not started |
+| 02 | Vision extraction | 🔄 in PR |
 | 03 | Barcode decoding | ⬜ not started |
 | 04 | Google Wallet pass | ⬜ not started |
 | 05 | End-to-end flow | ⬜ not started |
@@ -24,6 +24,32 @@ Last updated: 2026-04-21 — Phase 01 implementation complete, pending PR + Clou
 Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
+
+## Phase 02 — Vision extraction 🔄
+
+| Task | Status |
+|------|--------|
+| OCR engine eval (Gemini won decisively on Hebrew) | ✅ |
+| `models/ticket.py` — `ExtractedTicket`, `DraftState` | ✅ |
+| `models/callback_ids.py` — `CallbackId` enum + strict parser | ✅ |
+| `services/draft_store.py` — in-memory, per-chat lock, TTL, LRU | ✅ |
+| `services/vision_service.py` — facade (`VisionServiceProtocol`, `TextDumpProtocol`, `VisionExtractionError`) | ✅ |
+| `services/gemini_vision.py` — shared Gemini backend (script + skill + bot) | ✅ |
+| `services/telegram_client.py` — `send_with_inline_keyboard`, `edit_message_text`, `answer_callback_query`, `send_force_reply`, `download_photo_bytes` | ✅ |
+| `handlers/_safe.py` + `handlers/_render.py` | ✅ |
+| `handlers/photo_handler.py` — download → extract → render draft | ✅ |
+| `handlers/callback_handler.py` — edit / approve / cancel | ✅ |
+| `handlers/edit_reply_handler.py` — text-reply applies to draft | ✅ |
+| `main.py` — callback_query + text-in-edit-mode + DM-only routing | ✅ |
+| `config.py` — `GEMINI_API_KEY` | ✅ |
+| `pyproject.toml` — `google-genai` promoted to main deps | ✅ |
+| `scripts/eval_ocr.py` + `debugging-hebrew-ocr` skill re-use facade | ✅ |
+| Unit coverage ≥80% (105 tests green) | ✅ |
+| `.env.example` — add `GEMINI_API_KEY=` (manual, pre-edit guard) | ⬜ |
+| Live integration test (`pytest -m integration` with real key) | ⬜ |
+| Manual end-to-end test via ngrok + real bot | ⬜ |
+| `phases/02-vision-extraction/plan.md` — supersede with executed plan | ⬜ |
+| PR opened, CI green, merged to main | ⬜ |
 
 ## Phase 01 — Telegram webhook 🔄
 
