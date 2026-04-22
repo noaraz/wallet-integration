@@ -19,6 +19,17 @@ dev = [
     "httpx>=0.27",
     "asgi-lifespan>=2.1",
 ]
+# eval: throwaway benchmarking tools — not installed in prod, not required for tests.
+# surya-ocr is intentionally excluded here: it pulls in PyTorch + CUDA (>2 GB) and
+# is skipped gracefully by the script when not available.
+# To try surya: pip install surya-ocr  (outside Docker, or in a separate image).
+eval = [
+    "pdfplumber>=0.11",
+    "pytesseract>=0.3",
+    "Pillow>=10",
+    "pdf2image>=1.17",
+    "google-genai>=0.3",
+]
 
 [build-system]
 requires = ["setuptools>=68"]

@@ -8,9 +8,12 @@ services:
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests
+      - ./scripts:/app/scripts
       - ./pyproject.toml:/app/pyproject.toml
     environment:
       - PYTHONPATH=/app/src
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
     stdin_open: true
     tty: true
     command: bash
