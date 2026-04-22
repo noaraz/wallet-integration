@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     bot_token: SecretStr  # env: BOT_TOKEN
     webhook_secret: SecretStr  # env: WEBHOOK_SECRET
     allowed_tg_user_ids: list[int]  # env: ALLOWED_TG_USER_IDS (comma-separated)
+    gemini_api_key: SecretStr  # env: GEMINI_API_KEY (https://aistudio.google.com/app/apikey)
 
     @field_validator("allowed_tg_user_ids")
     @classmethod
