@@ -59,13 +59,16 @@ If someone suggests any of these, push back and cite this skill.
 
 ## Step 4 — Gemini integration notes
 
+**All Gemini calls go through one module: `src/wallet_bot/services/gemini_vision.py`.** The facade at `src/wallet_bot/services/vision_service.py` is the only import surface — handlers, `scripts/eval_ocr.py`, and this skill all reach Gemini via `create_default_service(api_key)` (structured `ExtractedTicket`) or `create_default_text_dumper(api_key)` (raw-text dump). Do not call `google.genai` directly from anywhere else — if you need a new pattern, extend `gemini_vision.py` and expose it through the facade.
+
+Key facts encoded there:
 - SDK: `google-genai` (not the deprecated `google-generativeai`)
 - Model: `gemini-2.5-flash` (free tier is sufficient — 1500 req/day as of 2026-04; check current quotas)
-- PDFs: pass directly with `mime_type="application/pdf"` — no rendering needed when Gemini is the engine
-- Images: `mime_type="image/png"` / `"image/jpeg"` (note: `image/jpg` is invalid — normalise to `jpeg`)
-- Prompt it for **raw text in reading order** for OCR comparison, or **strict JSON** matching your Pydantic model for production extraction
+- PDFs: pass with `mime_type="application/pdf"` — supported by the raw-text path
+- Images: `mime_type="image/png"` / `"image/jpeg"` (note: `image/jpg` is invalid — the facade normalises to `jpeg`)
+- Raw text vs structured: `RAW_TEXT_PROMPT` for OCR comparison, `STRUCTURED_PROMPT` + `response_schema=ExtractedTicket` for production extraction
 
-Minimal working call pattern is in `scripts/eval_ocr.py:run_gemini()`.
+Switching backends (Claude Vision, local VLM, etc.) is a one-file change: rewrite `create_default_service` / `create_default_text_dumper` in `vision_service.py`. No caller needs to change.
 
 ## Common mistakes
 

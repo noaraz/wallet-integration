@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
+
 from wallet_bot.models.ticket import DraftState, ExtractedTicket
 
 

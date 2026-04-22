@@ -6,9 +6,9 @@ import asyncio
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from wallet_bot.services.draft_store import DraftStore
 
 from wallet_bot.models.ticket import DraftState, ExtractedTicket
+from wallet_bot.services.draft_store import DraftStore
 
 
 def _make_draft(message_id: int = 1, event: str | None = None) -> DraftState:

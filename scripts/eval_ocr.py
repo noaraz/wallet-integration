@@ -12,12 +12,9 @@ import os  # used inside run_gemini via os.environ
 import sys
 from pathlib import Path
 
-GEMINI_MODEL = "gemini-2.5-flash"
-GEMINI_PROMPT = (
-    "Extract ALL text from this ticket exactly as it appears, preserving Hebrew. "
-    "Output only the raw text in natural reading order, one field per line. "
-    "No commentary, no JSON, no markdown."
-)
+# Gemini model / prompt / client construction live in the production vision
+# service so the script, skill, and handlers cannot drift.
+from wallet_bot.services.gemini_vision import GEMINI_DEFAULT_MODEL as GEMINI_MODEL
 
 
 def _sep(label: str) -> str:
@@ -115,23 +112,13 @@ def run_gemini(path: Path) -> str:
         return "SKIP: set GEMINI_API_KEY (https://aistudio.google.com/app/apikey)"
 
     try:
-        from google import genai
-        from google.genai import types
+        from wallet_bot.services.vision_service import create_default_text_dumper
     except ImportError as e:
         return f"SKIP: {e} (pip install google-genai)"
 
     try:
-        client = genai.Client(api_key=api_key)
-        mime = "application/pdf" if _is_pdf(path) else f"image/{path.suffix.lstrip('.').lower()}"
-        if mime == "image/jpg":
-            mime = "image/jpeg"
-
-        part = types.Part.from_bytes(data=path.read_bytes(), mime_type=mime)
-        response = client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=[part, GEMINI_PROMPT],
-        )
-        return (response.text or "").strip() or "(no text extracted)"
+        dumper = create_default_text_dumper(api_key)
+        return dumper.dump_file(path).strip() or "(no text extracted)"
     except Exception as e:
         return f"ERROR: {e}"
 

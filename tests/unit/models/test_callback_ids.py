@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import pytest
+
 from wallet_bot.models.callback_ids import (
     EDIT_FIELD_TO_TICKET_ATTR,
     CallbackId,
     parse_callback_id,
 )
-
 from wallet_bot.models.ticket import ExtractedTicket
 
 
