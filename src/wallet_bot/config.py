@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     bot_token: SecretStr  # env: BOT_TOKEN
     webhook_secret: SecretStr  # env: WEBHOOK_SECRET
     allowed_tg_user_ids: list[int]  # env: ALLOWED_TG_USER_IDS (comma-separated)
+    gemini_api_key: SecretStr  # env: GEMINI_API_KEY (https://aistudio.google.com/app/apikey)
+    gemini_model: str = (
+        "gemini-2.5-flash"  # env: GEMINI_MODEL — override to ride out capacity outages
+    )
 
     @field_validator("allowed_tg_user_ids")
     @classmethod
@@ -73,3 +77,20 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+class GeminiSettings(BaseSettings):
+    """Stripped-down settings for ad-hoc Gemini-only tools (e.g.
+    ``scripts/eval_ocr.py``).
+
+    Exists so CLI tools can load just the Gemini env vars without forcing
+    the operator to set ``BOT_TOKEN`` / ``WEBHOOK_SECRET`` etc. that are
+    only relevant when running the bot. Centralises env access in
+    ``config.py`` per the root CLAUDE.md rule (no ``os.environ`` outside
+    this module).
+    """
+
+    gemini_api_key: SecretStr  # env: GEMINI_API_KEY
+    gemini_model: str = "gemini-2.5-flash"  # env: GEMINI_MODEL
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")

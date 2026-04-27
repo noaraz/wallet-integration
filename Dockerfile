@@ -7,9 +7,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
 # System deps for the barcode lib are installed in Phase 3.
+# tesseract-ocr + heb lang pack + poppler-utils (pdf2image) are needed by the Phase 02 eval script.
 # This apt layer stays so later phase PRs can append packages here.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
+        tesseract-ocr \
+        tesseract-ocr-heb \
+        poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -19,7 +23,7 @@ FROM base AS dev
 
 COPY pyproject.toml ./
 COPY src/ ./src/
-RUN pip install --upgrade pip && pip install -e '.[dev]'
+RUN pip install --upgrade pip && pip install -e '.[dev,eval]'
 
 ENV PORT=8080
 EXPOSE 8080
