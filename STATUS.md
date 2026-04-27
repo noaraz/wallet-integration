@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-27 — Phase 02 verified end-to-end on real Telegram, pending `.env.example` manual edit + PR
+Last updated: 2026-04-27 — Phase 02 merged ✅. Next focus: Phase 03 (barcode decoding).
 
 ## Current Focus
 
-**Phase 02 — Vision extraction (Gemini-only, interactive edit)** — 115 unit tests green, ruff clean, manually verified via ngrok + real bot (photo → 10 s OCR with refreshing "typing…" → editable draft → "✓ updated" inline ack on edit → approve logs structured JSON without `raw_text`). Pending: `.env.example` manual edit (pre-edit guard), then `/ship`.
+**Phase 03 — Barcode decoding** — not started. Brainstorm via `/superpowers:brainstorming` in a new session. Phase 02 shipped via PR #3 with 118 unit tests, manual end-to-end verified, two post-review fixes (non-private callback ack + env access centralised in `config.py`).
 
 ---
 
@@ -14,7 +14,7 @@ Last updated: 2026-04-27 — Phase 02 verified end-to-end on real Telegram, pend
 |---|---|---|
 | 00 | Scaffold | ✅ done |
 | 01 | Telegram webhook | 🔄 in PR |
-| 02 | Vision extraction | 🔄 in PR |
+| 02 | Vision extraction | ✅ done |
 | 03 | Barcode decoding | ⬜ not started |
 | 04 | Google Wallet pass | ⬜ not started |
 | 05 | End-to-end flow | ⬜ not started |
@@ -25,7 +25,7 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
 
-## Phase 02 — Vision extraction 🔄
+## Phase 02 — Vision extraction ✅
 
 | Task | Status |
 |------|--------|
@@ -44,13 +44,14 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | `config.py` — `GEMINI_API_KEY` (required) + `GEMINI_MODEL` (override default model) | ✅ |
 | `pyproject.toml` — `google-genai` promoted to main deps | ✅ |
 | `scripts/eval_ocr.py` + `debugging-hebrew-ocr` skill re-use facade | ✅ |
-| Unit coverage ≥80% (115 tests green) | ✅ |
+| Unit coverage ≥80% (118 tests green, 92% total) | ✅ |
 | Manual end-to-end test via ngrok + real bot (photo → edit → approve, "typing…" + "✓ updated" both visible) | ✅ |
 | Multi-ticket-per-event design notes added to phases 04 + 05 | ✅ |
 | `phases/02-vision-extraction/plan.md` — superseded with executed plan summary | ✅ |
-| `.env.example` — add `GEMINI_API_KEY=` and `GEMINI_MODEL=` (manual edit; pre-edit guard) | ⬜ |
+| `.env.example` — `GEMINI_API_KEY` + `GEMINI_MODEL` documented | ✅ |
+| Post-review fixes: non-private callback acks the query; `GeminiSettings` keeps env access in `config.py` | ✅ |
 | Live integration test (`pytest -m integration` with real key) | ⬜ deferred — eval script + manual e2e cover this |
-| PR opened, CI green, merged to main | ⬜ |
+| PR #3 merged to main | ✅ |
 
 ## Phase 01 — Telegram webhook 🔄
 
