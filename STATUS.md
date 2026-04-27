@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-22 — Phase 02 implementation complete, pending PR + manual/live verification
+Last updated: 2026-04-27 — Phase 02 verified end-to-end on real Telegram, pending `.env.example` manual edit + PR
 
 ## Current Focus
 
-**Phase 02 — Vision extraction (Gemini-only, interactive edit)** — all unit tests green (105 passing), lint clean. Pending: `.env.example` manual edit, live integration test with a real `GEMINI_API_KEY`, end-to-end manual test via ngrok, PR.
+**Phase 02 — Vision extraction (Gemini-only, interactive edit)** — 115 unit tests green, ruff clean, manually verified via ngrok + real bot (photo → 10 s OCR with refreshing "typing…" → editable draft → "✓ updated" inline ack on edit → approve logs structured JSON without `raw_text`). Pending: `.env.example` manual edit (pre-edit guard), then `/ship`.
 
 ---
 
@@ -35,20 +35,21 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | `services/draft_store.py` — in-memory, per-chat lock, TTL, LRU | ✅ |
 | `services/vision_service.py` — facade (`VisionServiceProtocol`, `TextDumpProtocol`, `VisionExtractionError`) | ✅ |
 | `services/gemini_vision.py` — shared Gemini backend (script + skill + bot) | ✅ |
-| `services/telegram_client.py` — `send_with_inline_keyboard`, `edit_message_text`, `answer_callback_query`, `send_force_reply`, `download_photo_bytes` | ✅ |
-| `handlers/_safe.py` + `handlers/_render.py` | ✅ |
-| `handlers/photo_handler.py` — download → extract → render draft | ✅ |
-| `handlers/callback_handler.py` — edit / approve / cancel | ✅ |
-| `handlers/edit_reply_handler.py` — text-reply applies to draft | ✅ |
-| `main.py` — callback_query + text-in-edit-mode + DM-only routing | ✅ |
-| `config.py` — `GEMINI_API_KEY` | ✅ |
+| `services/telegram_client.py` — `send_with_inline_keyboard`, `edit_message_text`, `answer_callback_query`, `send_force_reply`, `download_photo_bytes`, `send_chat_action` | ✅ |
+| `handlers/_safe.py` + `handlers/_render.py` + `handlers/_typing.py` | ✅ |
+| `handlers/photo_handler.py` — download → extract → render draft, with refreshing "typing…" indicator | ✅ |
+| `handlers/callback_handler.py` — edit / approve / cancel (no redundant message-edit on EDIT_* tap) | ✅ |
+| `handlers/edit_reply_handler.py` — apply edit → re-render in place → inline "✓ updated" ack | ✅ |
+| `main.py` — callback_query + text-in-edit-mode + DM-only routing + INFO logging | ✅ |
+| `config.py` — `GEMINI_API_KEY` (required) + `GEMINI_MODEL` (override default model) | ✅ |
 | `pyproject.toml` — `google-genai` promoted to main deps | ✅ |
 | `scripts/eval_ocr.py` + `debugging-hebrew-ocr` skill re-use facade | ✅ |
-| Unit coverage ≥80% (105 tests green) | ✅ |
-| `.env.example` — add `GEMINI_API_KEY=` (manual, pre-edit guard) | ⬜ |
-| Live integration test (`pytest -m integration` with real key) | ⬜ |
-| Manual end-to-end test via ngrok + real bot | ⬜ |
-| `phases/02-vision-extraction/plan.md` — supersede with executed plan | ⬜ |
+| Unit coverage ≥80% (115 tests green) | ✅ |
+| Manual end-to-end test via ngrok + real bot (photo → edit → approve, "typing…" + "✓ updated" both visible) | ✅ |
+| Multi-ticket-per-event design notes added to phases 04 + 05 | ✅ |
+| `phases/02-vision-extraction/plan.md` — superseded with executed plan summary | ✅ |
+| `.env.example` — add `GEMINI_API_KEY=` and `GEMINI_MODEL=` (manual edit; pre-edit guard) | ⬜ |
+| Live integration test (`pytest -m integration` with real key) | ⬜ deferred — eval script + manual e2e cover this |
 | PR opened, CI green, merged to main | ⬜ |
 
 ## Phase 01 — Telegram webhook 🔄
