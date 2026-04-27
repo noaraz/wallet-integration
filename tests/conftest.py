@@ -19,6 +19,7 @@ class FakeClient(TelegramClientProtocol):  # type: ignore[misc]
         self.answered: list[str] = []
         self.force_replies: list[tuple[int, str]] = []
         self.downloaded: list[str] = []
+        self.chat_actions: list[tuple[int, str]] = []
         # Test-configurable: next message_id to return from send/force_reply.
         self.next_message_id: int = 1000
         # Test-configurable: bytes returned by download_photo_bytes.
@@ -60,6 +61,9 @@ class FakeClient(TelegramClientProtocol):  # type: ignore[misc]
     async def download_photo_bytes(self, file_id: str) -> tuple[bytes, str]:
         self.downloaded.append(file_id)
         return self.next_photo_bytes, self.next_photo_mime
+
+    async def send_chat_action(self, chat_id: int, action: str) -> None:
+        self.chat_actions.append((chat_id, action))
 
 
 @pytest.fixture

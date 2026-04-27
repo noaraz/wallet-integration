@@ -48,6 +48,8 @@ class TelegramClientProtocol(Protocol):
 
     async def download_photo_bytes(self, file_id: str) -> tuple[bytes, str]: ...
 
+    async def send_chat_action(self, chat_id: int, action: str) -> None: ...
+
 
 def _to_markup(rows: list[list[InlineButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
@@ -109,3 +111,12 @@ class TelegramClient:
         buf = await tg_file.download_as_bytearray()
         # Telegram compresses photos to JPEG regardless of what the user uploaded.
         return bytes(buf), "image/jpeg"
+
+    async def send_chat_action(self, chat_id: int, action: str) -> None:
+        """Show a transient status (e.g. ``"typing"``) in the chat header.
+
+        Telegram displays the indicator for ~5 s, so callers performing a
+        long operation should re-send periodically. The action types are
+        listed at https://core.telegram.org/bots/api#sendchataction.
+        """
+        await self._bot.send_chat_action(chat_id=chat_id, action=action)

@@ -17,8 +17,20 @@ def test_protocol_exposes_phase_02_methods() -> None:
         "answer_callback_query",
         "send_force_reply",
         "download_photo_bytes",
+        "send_chat_action",
     ):
         assert hasattr(TelegramClientProtocol, method), method
+
+
+async def test_send_chat_action_delegates_to_bot() -> None:
+    from wallet_bot.services.telegram_client import TelegramClient
+
+    bot = MagicMock()
+    bot.send_chat_action = AsyncMock()
+    client = TelegramClient(bot)
+
+    await client.send_chat_action(chat_id=42, action="typing")
+    bot.send_chat_action.assert_called_once_with(chat_id=42, action="typing")
 
 
 def test_send_text_signature() -> None:

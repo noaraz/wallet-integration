@@ -25,6 +25,20 @@ async def store() -> DraftStore:
     return DraftStore()
 
 
+async def test_typing_indicator_is_sent_during_edit(fake_client, store) -> None:
+    """Even though the edit path is fast, the user needs an instant ack."""
+    await store.put(42, _draft_editing("event_name"))
+
+    await handle_edit_reply(
+        chat_id=42,
+        client=fake_client,
+        text="גיא מזיג",
+        store=store,
+    )
+
+    assert (42, "typing") in fake_client.chat_actions
+
+
 async def test_applies_edit_and_rerenders_draft(fake_client, store) -> None:
     await store.put(42, _draft_editing("event_name"))
 

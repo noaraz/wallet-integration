@@ -30,6 +30,24 @@ def store() -> DraftStore:
     return DraftStore()
 
 
+async def test_typing_indicator_is_sent_before_extraction(fake_client, store) -> None:
+    """Long Gemini calls would otherwise leave the user staring at silence —
+    a 'typing…' chat action gives immediate feedback that we got the photo."""
+    ticket = ExtractedTicket(event_name="גיא מזיג")
+    vision = _FakeVision(ticket)
+
+    await handle_photo(
+        chat_id=42,
+        client=fake_client,
+        file_id="PHOTO123",
+        vision=vision,
+        store=store,
+    )
+
+    # At least one "typing" chat action was sent to chat 42.
+    assert (42, "typing") in fake_client.chat_actions
+
+
 async def test_happy_path_stores_draft_and_sends_keyboard(fake_client, store) -> None:
     ticket = ExtractedTicket(event_name="גיא מזיג", price="₪134")
     vision = _FakeVision(ticket)

@@ -76,6 +76,23 @@ async def test_edit_button_sends_force_reply_and_marks_editing_field(
     assert draft.editing_field == "event_name"
 
 
+async def test_edit_button_does_not_redundantly_edit_draft_message(
+    fake_client, store_with_draft
+) -> None:
+    """Re-rendering an unchanged draft makes Telegram throw BadRequest:
+    'Message is not modified', which @safe_handler then surfaces as a
+    generic error reply — making the bot look broken on every edit tap."""
+    await handle_callback(
+        chat_id=42,
+        client=fake_client,
+        callback_query_id="cb1",
+        callback_data="edit_event_name",
+        store=store_with_draft,
+    )
+
+    assert fake_client.edited == []  # no useless edit_message_text call
+
+
 async def test_approve_logs_ticket_and_clears_draft(fake_client, store_with_draft, caplog) -> None:
     with caplog.at_level(logging.INFO):
         await handle_callback(

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from wallet_bot.handlers._render import render_draft
 from wallet_bot.handlers._safe import safe_handler
+from wallet_bot.handlers._typing import typing_indicator
 from wallet_bot.services.draft_store import DraftStore
 from wallet_bot.services.telegram_client import TelegramClientProtocol
 
@@ -29,15 +30,18 @@ async def handle_edit_reply(
         return
 
     field = draft.editing_field
-    await store.apply_edit(chat_id, field, value)
+    # Fast path (no Gemini), but a "typing…" tick gives an immediate
+    # "got your reply" signal while the edit_message_text round-trip runs.
+    async with typing_indicator(client, chat_id):
+        await store.apply_edit(chat_id, field, value)
 
-    updated = await store.get(chat_id)
-    if updated is None:
-        return
-    new_text, rows = render_draft(updated.ticket)
-    await client.edit_message_text(
-        chat_id=chat_id,
-        message_id=updated.message_id,
-        text=new_text,
-        rows=rows,
-    )
+        updated = await store.get(chat_id)
+        if updated is None:
+            return
+        new_text, rows = render_draft(updated.ticket)
+        await client.edit_message_text(
+            chat_id=chat_id,
+            message_id=updated.message_id,
+            text=new_text,
+            rows=rows,
+        )

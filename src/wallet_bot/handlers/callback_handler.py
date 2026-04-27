@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import logging
 
-from wallet_bot.handlers._render import field_prompt, label_for, render_draft
+from wallet_bot.handlers._render import field_prompt, label_for
 from wallet_bot.handlers._safe import safe_handler
 from wallet_bot.models.callback_ids import (
     EDIT_FIELD_TO_TICKET_ATTR,
@@ -73,12 +73,8 @@ async def handle_callback(
     await store.set_editing_field(chat_id, attr)
     label = label_for(cb) or attr
     await client.send_force_reply(chat_id=chat_id, text=field_prompt(label))
-    # Re-render the original draft message unchanged — not strictly needed
-    # but keeps the keyboard live and the user oriented.
-    text, rows = render_draft(draft.ticket)
-    await client.edit_message_text(
-        chat_id=chat_id,
-        message_id=draft.message_id,
-        text=text,
-        rows=rows,
-    )
+    # Note: we deliberately do NOT re-render the draft message here. The
+    # contents haven't changed (only the in-memory editing_field has),
+    # and Telegram's edit_message_text rejects no-op edits with
+    # ``BadRequest: Message is not modified``. The keyboard stays live
+    # on the original message; the ForceReply prompt is the visible cue.

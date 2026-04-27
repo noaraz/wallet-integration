@@ -36,3 +36,6 @@ htmlcov/
 
 # Build artifacts
 *.log
+
+# Local-only test fixtures (real ticket screenshots contain PII)
+tests/fixtures/

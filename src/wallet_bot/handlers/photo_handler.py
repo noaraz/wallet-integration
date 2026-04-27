@@ -16,6 +16,7 @@ from datetime import UTC, datetime
 
 from wallet_bot.handlers._render import render_draft
 from wallet_bot.handlers._safe import safe_handler
+from wallet_bot.handlers._typing import typing_indicator
 from wallet_bot.models.ticket import DraftState
 from wallet_bot.services.draft_store import DraftStore
 from wallet_bot.services.telegram_client import TelegramClientProtocol
@@ -31,8 +32,12 @@ async def handle_photo(
     vision: VisionServiceProtocol,
     store: DraftStore,
 ) -> None:
-    image_bytes, mime = await client.download_photo_bytes(file_id=file_id)
-    ticket = await vision.extract(image_bytes, mime_type=mime)
+    # The Gemini call routinely takes 5-15 s. Show a refreshing "typing..."
+    # indicator so the user sees immediate feedback that the bot received
+    # the photo and is working on it.
+    async with typing_indicator(client, chat_id):
+        image_bytes, mime = await client.download_photo_bytes(file_id=file_id)
+        ticket = await vision.extract(image_bytes, mime_type=mime)
 
     text, rows = render_draft(ticket)
     message_id = await client.send_with_inline_keyboard(
