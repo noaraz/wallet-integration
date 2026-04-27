@@ -129,9 +129,12 @@ async def webhook(
     cbq = update.callback_query
     if cbq is not None:
         _logger.info("update: callback_query data=%r chat=%s", cbq.data, chat_id)
-        # Non-private chats: drop silently (keyboard should never have been
-        # visible in a group anyway).
+        # Non-private chats: ack so the Telegram button spinner stops
+        # (otherwise it loops for ~30 s on every tap of a forwarded
+        # keyboard message), then drop the callback unprocessed since we
+        # only support DM flows.
         if cbq.message is not None and cbq.message.chat.type != "private":
+            await client.answer_callback_query(callback_query_id=cbq.id)
             return {"ok": "true"}
         await handle_callback(
             chat_id=chat_id,

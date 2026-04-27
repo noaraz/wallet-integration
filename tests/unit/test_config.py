@@ -86,3 +86,29 @@ def test_gemini_model_override_from_env(monkeypatch):
     monkeypatch.setenv("GEMINI_MODEL", "gemini-flash-latest")
     s = Settings(_env_file=None)
     assert s.gemini_model == "gemini-flash-latest"
+
+
+def test_gemini_only_settings_does_not_require_bot_vars(monkeypatch):
+    """Eval/CLI tools (scripts/eval_ocr.py) should be able to load just
+    Gemini config without forcing the user to set BOT_TOKEN etc.
+    Keeps env-var access inside config.py per CLAUDE.md."""
+    from wallet_bot.config import GeminiSettings
+
+    monkeypatch.delenv("BOT_TOKEN", raising=False)
+    monkeypatch.delenv("WEBHOOK_SECRET", raising=False)
+    monkeypatch.delenv("ALLOWED_TG_USER_IDS", raising=False)
+    monkeypatch.setenv("GEMINI_API_KEY", "abc-123")
+
+    s = GeminiSettings(_env_file=None)
+    assert s.gemini_api_key.get_secret_value() == "abc-123"
+    assert s.gemini_model == "gemini-2.5-flash"
+
+
+def test_gemini_only_settings_honours_model_override(monkeypatch):
+    from wallet_bot.config import GeminiSettings
+
+    monkeypatch.setenv("GEMINI_API_KEY", "k")
+    monkeypatch.setenv("GEMINI_MODEL", "gemini-flash-latest")
+
+    s = GeminiSettings(_env_file=None)
+    assert s.gemini_model == "gemini-flash-latest"

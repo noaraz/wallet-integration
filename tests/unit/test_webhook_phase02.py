@@ -144,6 +144,22 @@ async def test_group_chat_photo_is_rejected_with_dm_only_reply(
     assert any("dm" in text.lower() or "private" in text.lower() for _, text in fake_client.sent)
 
 
+async def test_group_chat_callback_acks_query_and_drops_silently(
+    test_app, fake_client, patched_vision
+) -> None:
+    """A forwarded keyboard message tapped in a group must NOT leave the
+    Telegram button spinner running. Even when we drop the callback (we
+    only support DMs), we must answer_callback_query first."""
+    bad = _callback_update("edit_event_name", chat_type="group")
+    resp = await test_app.post("/telegram/webhook", json=bad, headers=_headers())
+    assert resp.status_code == 200
+    # Query must be acked (spinner stops) even though we won't process it.
+    assert "cb-abc" in fake_client.answered
+    # No downstream side effects (no draft mutation, no force_reply, no edit).
+    assert fake_client.force_replies == []
+    assert fake_client.edited == []
+
+
 async def test_unknown_callback_data_is_dropped_safely(
     test_app, fake_client, patched_vision
 ) -> None:

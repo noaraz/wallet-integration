@@ -8,7 +8,6 @@ Gemini requires GEMINI_API_KEY (or GOOGLE_API_KEY) in the environment.
 Get a free key at https://aistudio.google.com/app/apikey
 """
 
-import os  # used inside run_gemini via os.environ
 import sys
 from pathlib import Path
 
@@ -107,8 +106,12 @@ def run_surya(path: Path) -> str:
 
 
 def run_gemini(path: Path) -> str:
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    if not api_key:
+    # All env access goes through config.py per the root CLAUDE.md rule.
+    try:
+        from wallet_bot.config import GeminiSettings
+
+        settings = GeminiSettings()
+    except Exception:
         return "SKIP: set GEMINI_API_KEY (https://aistudio.google.com/app/apikey)"
 
     try:
@@ -116,9 +119,11 @@ def run_gemini(path: Path) -> str:
     except ImportError as e:
         return f"SKIP: {e} (pip install google-genai)"
 
-    model = os.environ.get("GEMINI_MODEL")  # optional override for outages
     try:
-        dumper = create_default_text_dumper(api_key, model=model)
+        dumper = create_default_text_dumper(
+            settings.gemini_api_key.get_secret_value(),
+            model=settings.gemini_model,
+        )
         return dumper.dump_file(path).strip() or "(no text extracted)"
     except Exception as e:
         return f"ERROR: {e}"
