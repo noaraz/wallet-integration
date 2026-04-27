@@ -18,6 +18,7 @@ up.  Lifespan still handles the cheap, always-needed objects (``Bot`` +
 from __future__ import annotations
 
 import hmac
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated
@@ -37,6 +38,14 @@ from wallet_bot.services.vision_service import (
     VisionServiceProtocol,
     create_default_service,
 )
+
+# Default to INFO so handler logs are visible in `docker compose` output.
+# basicConfig is a no-op if logging was already configured (e.g. in tests).
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+_logger = logging.getLogger(__name__)
 
 _DM_ONLY_REPLY = "This bot only works in private DMs."
 
@@ -119,6 +128,7 @@ async def webhook(
     # --- Callback query (inline-button tap) -----------------------------------
     cbq = update.callback_query
     if cbq is not None:
+        _logger.info("update: callback_query data=%r chat=%s", cbq.data, chat_id)
         # Non-private chats: drop silently (keyboard should never have been
         # visible in a group anyway).
         if cbq.message is not None and cbq.message.chat.type != "private":
@@ -135,7 +145,15 @@ async def webhook(
     # --- Message updates ------------------------------------------------------
     msg = update.message
     if msg is None:
+        _logger.info("update: no message, no callback (ignored) chat=%s", chat_id)
         return {"ok": "true"}
+
+    _logger.info(
+        "update: message chat=%s photo=%s text=%r",
+        chat_id,
+        bool(msg.photo),
+        (msg.text[:80] if msg.text else None),
+    )
 
     # DM-only: reject photos/text in group/supergroup/channel with one-shot
     # reply and do NOT invoke any downstream handler.
@@ -171,6 +189,11 @@ async def webhook(
             return {"ok": "true"}
 
         draft = await store.get(chat_id)
+        _logger.info(
+            "text routing: draft=%s editing_field=%s",
+            "yes" if draft else "no",
+            draft.editing_field if draft else None,
+        )
         if draft is not None and draft.editing_field is not None:
             await handle_edit_reply(
                 chat_id=chat_id,

@@ -42,7 +42,7 @@ async def typing_indicator(
                 try:
                     await client.send_chat_action(chat_id, action)
                 except Exception:  # pragma: no cover — best-effort
-                    _logger.debug("send_chat_action failed", exc_info=True)
+                    _logger.warning("send_chat_action loop failed", exc_info=True)
                 await asyncio.sleep(refresh_seconds)
         except asyncio.CancelledError:
             return
@@ -51,8 +51,9 @@ async def typing_indicator(
     # how fast the wrapped block runs (also makes tests deterministic).
     try:
         await client.send_chat_action(chat_id, action)
+        _logger.info("send_chat_action ok chat=%s action=%s", chat_id, action)
     except Exception:  # pragma: no cover — best-effort
-        _logger.debug("initial send_chat_action failed", exc_info=True)
+        _logger.warning("initial send_chat_action failed", exc_info=True)
 
     task = asyncio.create_task(_loop())
     try:

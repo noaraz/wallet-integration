@@ -59,3 +59,12 @@ def label_for(callback: CallbackId) -> str | None:
         if cb is callback:
             return label
     return None
+
+
+def label_for_attr(attr: str) -> str | None:
+    """Map a ticket attribute name (e.g. ``"venue_address"``) to its human
+    label (``"Address"``). Returns ``None`` for unknown attributes."""
+    for a, label, _cb in _FIELDS:
+        if a == attr:
+            return label
+    return None

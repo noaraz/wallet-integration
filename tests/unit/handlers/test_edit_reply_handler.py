@@ -25,6 +25,28 @@ async def store() -> DraftStore:
     return DraftStore()
 
 
+async def test_edit_sends_confirmation_reply(fake_client, store) -> None:
+    """User scrolls down to type the new value — they need a visible
+    'got it' next to where they're looking, not a silent in-place edit
+    far above. The confirmation must include the human label of the field
+    so the user knows what changed."""
+    await store.put(42, _draft_editing("venue_address"))
+
+    await handle_edit_reply(
+        chat_id=42,
+        client=fake_client,
+        text="גני יהושע",
+        store=store,
+    )
+
+    confirmations = [text for cid, text in fake_client.sent if cid == 42]
+    assert confirmations, "expected a confirmation reply"
+    # Confirmation references the human label, not the snake_case attr.
+    msg = confirmations[-1].lower()
+    assert "address" in msg
+    assert "venue_address" not in msg  # raw attr name must not leak
+
+
 async def test_typing_indicator_is_sent_during_edit(fake_client, store) -> None:
     """Even though the edit path is fast, the user needs an instant ack."""
     await store.put(42, _draft_editing("event_name"))
