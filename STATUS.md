@@ -13,7 +13,7 @@ Last updated: 2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (
 | # | Phase | Status |
 |---|---|---|
 | 00 | Scaffold | ✅ done |
-| 01 | Telegram webhook | 🔄 in PR |
+| 01 | Telegram webhook | ✅ done |
 | 02 | Vision extraction | ✅ done |
 | 03 | Barcode decoding | ✅ done |
 | 04 | Google Wallet pass | ⬜ not started |
@@ -65,7 +65,7 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | Live integration test (`pytest -m integration` with real key) | ⬜ deferred — eval script + manual e2e cover this |
 | PR #3 merged to main | ✅ |
 
-## Phase 01 — Telegram webhook 🔄
+## Phase 01 — Telegram webhook ✅
 
 | Task | Status |
 |------|--------|
@@ -78,10 +78,23 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | `.env.example` updated to match real env var names | ✅ |
 | Coverage ≥80% (actual: 90%), lint clean | ✅ |
 | `phases/01-*/plan.md` + `CLAUDE.md` filled in | ✅ |
-| Cloud Run deploy (me-west1) | ⬜ |
-| `deploy-cloud-run` skill (via `/superpowers:writing-skills`) | ⬜ |
-| `tg-webhook-register` skill (via `/superpowers:writing-skills`) | ⬜ |
-| PR opened, CI green, merged to main | ⬜ |
+| Cloud Run deploy (me-west1) | → deferred to Phase 07 |
+| `deploy-cloud-run` skill (via `/superpowers:writing-skills`) | → deferred to Phase 07 |
+| `tg-webhook-register` skill (via `/superpowers:writing-skills`) | → deferred to Phase 07 |
+| PR opened, CI green, merged to main | ✅ |
+
+## Phase 07 — Release pipeline ⬜
+
+Deferred items from earlier phases that belong here:
+
+| Task | Origin | Status |
+|------|--------|--------|
+| Cloud Run deploy (me-west1) | Phase 01 | ⬜ |
+| `deploy-cloud-run` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
+| `tg-webhook-register` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
+| `.claude/commands/release.md` + `RELEASING.md` | Phase 00 | ⬜ |
+
+---
 
 ## Phase 00 — Scaffold ✅
 

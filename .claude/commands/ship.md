@@ -144,3 +144,30 @@ When green, tell the user:
 > CI passed on PR #<N>. Ready to merge when you are.
 
 Do not merge for the user — `main` is protected and merging is a deliberate user action.
+
+---
+
+## 9. Post-merge STATUS.md update
+
+Once the user confirms the PR is merged, pull main and update `STATUS.md`:
+
+```bash
+git checkout main && git pull
+```
+
+Then edit `STATUS.md`:
+
+1. **"Last updated" line** — set to today's date and a one-line summary of what merged (e.g. `2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (Google Wallet pass).`).
+2. **Current Focus section** — update to the next phase (name + brief note on how to start it, e.g. "Brainstorm via `/superpowers:brainstorming` in a new session.").
+3. **Phase status table** — flip the shipped phase from 🔄 to ✅.
+4. **Phase task table** — mark any remaining open tasks that landed in this PR as ✅; add a "PR #N merged to main ✅" row if not already present.
+
+Commit directly to main (one-liner docs update — branch protection allows this for STATUS.md-only commits):
+
+```bash
+git add STATUS.md
+git commit -m "chore: update STATUS.md after PR #<N> merge"
+git push
+```
+
+Tell the user the status is up to date and what the next focus is.
