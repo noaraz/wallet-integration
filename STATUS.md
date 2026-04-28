@@ -25,19 +25,6 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
 
-## Phase 07 — Release pipeline ⬜
-
-Deferred items from earlier phases that belong here:
-
-| Task | Origin | Status |
-|------|--------|--------|
-| Cloud Run deploy (me-west1) | Phase 01 | ⬜ |
-| `deploy-cloud-run` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
-| `tg-webhook-register` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
-| `.claude/commands/release.md` + `RELEASING.md` | Phase 00 | ⬜ |
-
----
-
 ## Phase 03 — Barcode decoding ✅
 
 | Task | Status |

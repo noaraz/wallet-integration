@@ -11,7 +11,7 @@ Big-picture phase list. Each phase is a separate session: start with `/superpowe
 | 04 | Google Wallet pass | [phases/04-wallet-pass](phases/04-wallet-pass) | Build `eventTicketObject`, sign JWT, produce save URL. `features/wallet-pass/` emerges. |
 | 05 | End-to-end flow | [phases/05-end-to-end](phases/05-end-to-end) | Wire everything into the photo handler; "Add to Google Wallet" button in the reply. |
 | 06 | Observability & hardening | [phases/06-observability](phases/06-observability) | JSON logs, error reporting, per-user quotas, retries, friendly errors. |
-| 07 | Release pipeline & automated deploy | [phases/07-release-pipeline](phases/07-release-pipeline) | Create `RELEASING.md` + `.claude/commands/release.md`. `ci.yml` + `release.yml` with `production` approval gate → `gcloud run deploy`. End-to-end versioned deploys. |
+| 07 | Release pipeline & automated deploy | [phases/07-release-pipeline](phases/07-release-pipeline) | Create `RELEASING.md` + `.claude/commands/release.md`. `ci.yml` + `release.yml` with `production` approval gate → `gcloud run deploy`. End-to-end versioned deploys. Also picks up deferred items from Phase 01: Cloud Run deploy, `deploy-cloud-run` skill, `tg-webhook-register` skill. |
 
 ## Deployment touchpoints across the roadmap
 
