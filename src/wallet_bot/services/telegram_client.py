@@ -50,6 +50,10 @@ class TelegramClientProtocol(Protocol):
 
     async def send_chat_action(self, chat_id: int, action: str) -> None: ...
 
+    async def send_url_button(
+        self, chat_id: int, text: str, button_text: str, url: str
+    ) -> None: ...
+
 
 def _to_markup(rows: list[list[InlineButton]]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
@@ -120,3 +124,7 @@ class TelegramClient:
         listed at https://core.telegram.org/bots/api#sendchataction.
         """
         await self._bot.send_chat_action(chat_id=chat_id, action=action)
+
+    async def send_url_button(self, chat_id: int, text: str, button_text: str, url: str) -> None:
+        markup = InlineKeyboardMarkup([[InlineKeyboardButton(text=button_text, url=url)]])
+        await self._bot.send_message(chat_id=chat_id, text=text, reply_markup=markup)
