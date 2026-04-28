@@ -56,7 +56,7 @@ async def handle_callback(
         return
 
     if cb is CallbackId.APPROVE:
-        payload = draft.ticket.model_dump(exclude={"raw_text"})
+        payload = draft.ticket.model_dump(exclude={"raw_text": True, "barcode": {"barcode_value"}})
         # INFO-level structured log — Cloud Logging picks this up.
         _logger.info("ticket_approved %s", json.dumps(payload, ensure_ascii=False))
         await store.clear(chat_id)

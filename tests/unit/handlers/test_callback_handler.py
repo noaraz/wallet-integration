@@ -10,7 +10,7 @@ import pytest
 
 from wallet_bot.handlers._safe import GENERIC_ERROR_REPLY
 from wallet_bot.handlers.callback_handler import handle_callback
-from wallet_bot.models.ticket import DraftState, ExtractedTicket
+from wallet_bot.models.ticket import BarcodeResult, DraftState, ExtractedTicket
 from wallet_bot.services.draft_store import DraftStore
 
 
@@ -168,3 +168,39 @@ async def test_callback_exception_produces_generic_reply(fake_client) -> None:
         store=store,
     )
     assert (42, GENERIC_ERROR_REPLY) in fake_client.sent
+
+
+async def test_approve_excludes_barcode_value_from_log(fake_client, caplog) -> None:
+    store = DraftStore()
+    draft = DraftState(
+        ticket=ExtractedTicket(
+            event_name="גיא מזיג",
+            barcode=BarcodeResult(
+                barcode_type="QR_CODE",
+                barcode_value="super-secret-signed-token",
+            ),
+            raw_text="debug dump",
+        ),
+        message_id=99,
+        created_at=datetime.now(tz=UTC),
+    )
+    await store.put(42, draft)
+
+    with caplog.at_level(logging.INFO):
+        await handle_callback(
+            chat_id=42,
+            client=fake_client,
+            callback_query_id="cb1",
+            callback_data="approve",
+            store=store,
+        )
+
+    approval_lines = [r for r in caplog.records if "ticket_approved" in r.getMessage()]
+    assert len(approval_lines) == 1
+    line_text = approval_lines[0].getMessage()
+    # Sensitive payload must be absent.
+    assert "super-secret-signed-token" not in line_text
+    assert "barcode_value" not in line_text
+    # Safe metadata stays.
+    payload = json.loads(line_text.split("ticket_approved ", 1)[1])
+    assert payload["barcode"]["barcode_type"] == "QR_CODE"
