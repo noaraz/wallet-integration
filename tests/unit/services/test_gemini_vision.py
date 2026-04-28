@@ -107,3 +107,47 @@ class TestGeminiVisionService:
         except VisionExtractionError as e:
             assert "abc123" not in str(e)
             assert "api key" not in str(e).lower()
+
+    async def test_extract_returns_ticket_with_barcode(self) -> None:
+        raw_json = (
+            '{"event_name": "גיא מזיג", '
+            '"barcode": {"barcode_type": "QR_CODE", "barcode_value": "https://ticket.example/abc123"}}'
+        )
+        client = self._make_fake_client(raw_json)
+        svc = GeminiVisionService(client=client, model="gemini-2.5-flash")
+
+        ticket = await svc.extract(b"\x89PNG fake", mime_type="image/png")
+
+        assert ticket.barcode is not None
+        assert ticket.barcode.barcode_type == "QR_CODE"
+        assert ticket.barcode.barcode_value == "https://ticket.example/abc123"
+
+    async def test_extract_returns_none_barcode_when_absent(self) -> None:
+        raw_json = '{"event_name": "גיא מזיג"}'
+        client = self._make_fake_client(raw_json)
+        svc = GeminiVisionService(client=client, model="gemini-2.5-flash")
+
+        ticket = await svc.extract(b"\x89PNG fake", mime_type="image/png")
+
+        assert ticket.barcode is None
+
+    async def test_extract_normalises_empty_barcode_value_to_none(self) -> None:
+        raw_json = (
+            '{"event_name": "גיא מזיג", '
+            '"barcode": {"barcode_type": "QR_CODE", "barcode_value": ""}}'
+        )
+        client = self._make_fake_client(raw_json)
+        svc = GeminiVisionService(client=client, model="gemini-2.5-flash")
+
+        ticket = await svc.extract(b"\x89PNG fake", mime_type="image/png")
+
+        assert ticket.barcode is not None
+        assert ticket.barcode.barcode_value is None
+
+
+def test_structured_prompt_instructs_barcode_extraction() -> None:
+    from wallet_bot.services.gemini_vision import STRUCTURED_PROMPT
+
+    assert "barcode" in STRUCTURED_PROMPT.lower()
+    assert "barcode_type" in STRUCTURED_PROMPT
+    assert "barcode_value" in STRUCTURED_PROMPT

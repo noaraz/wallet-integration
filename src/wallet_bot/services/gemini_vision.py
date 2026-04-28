@@ -35,7 +35,11 @@ RAW_TEXT_PROMPT = (
 STRUCTURED_PROMPT = (
     "Extract ticket fields from this image. Preserve Hebrew text verbatim. "
     "Leave a field null when the value is not clearly present — never guess. "
-    "Return raw_text as the full transcribed reading-order dump of the ticket."
+    "Return raw_text as the full transcribed reading-order dump of the ticket. "
+    "If the ticket contains a QR code, barcode, or any machine-readable symbol, "
+    "set barcode_type to the format name (e.g. QR_CODE, CODE_128, AZTEC) and "
+    "barcode_value to its decoded payload. "
+    "If none is visible or readable, omit the barcode field entirely."
 )
 
 
