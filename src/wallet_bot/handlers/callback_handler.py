@@ -7,8 +7,9 @@ Routes an already-authorised ``callback_query`` to the right action:
 * ``edit_*`` → mark the draft's ``editing_field`` and send a ForceReply
   prompting the user for the new value. The actual edit is applied in
   :mod:`wallet_bot.handlers.edit_reply_handler` when the text arrives.
-* ``approve`` → log the approved ticket as JSON (excluding ``raw_text``)
-  at INFO level; clear the draft; reply with a confirmation.
+* ``approve`` → log the approved ticket as JSON (excluding ``raw_text``
+  and ``barcode_value``) at INFO level; clear the draft; reply with a
+  confirmation.
 * ``cancel`` → clear the draft; reply "Cancelled."
 """
 
