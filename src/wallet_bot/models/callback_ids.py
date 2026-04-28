@@ -24,6 +24,9 @@ class CallbackId(StrEnum):
     EDIT_PRICE = "edit_price"
     APPROVE = "approve"
     CANCEL = "cancel"
+    WALLET_GET_LINK = "wallet_get_link"
+    WALLET_BUNDLE_YES = "wallet_bundle_yes"
+    WALLET_BUNDLE_NO = "wallet_bundle_no"
 
 
 # Map each EDIT_* callback to the matching ExtractedTicket attribute.
