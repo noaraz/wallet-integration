@@ -29,3 +29,23 @@ async def test_help_sends_help_text(fake_client):
 
 # Phase 02 replaces the photo-handler stub; see
 # tests/unit/handlers/test_photo_handler.py for the full extract-and-render flow.
+
+
+async def test_start_explains_multi_ticket_flow(fake_client) -> None:
+    from wallet_bot.handlers.start_handler import handle_start
+
+    await handle_start(42, fake_client)
+    text = fake_client.sent[0][1].lower()
+    assert "wallet" in text
+    assert "ticket" in text
+    assert any(kw in text for kw in ("more ticket", "bundle", "get wallet link", "tap"))
+
+
+async def test_help_explains_multi_ticket_flow(fake_client) -> None:
+    from wallet_bot.handlers.help_handler import handle_help
+
+    await handle_help(42, fake_client)
+    text = fake_client.sent[0][1].lower()
+    assert "wallet" in text
+    assert "ticket" in text
+    assert any(kw in text for kw in ("multiple", "bundle", "more ticket", "get wallet link"))
