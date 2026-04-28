@@ -9,6 +9,8 @@ dependencies = [
     "python-telegram-bot>=21.0,<22",
     "pydantic-settings>=2.0",
     "google-genai>=0.3",
+    "google-auth>=2.29",
+    "google-auth-httplib2>=0.2",
 ]
 
 [project.optional-dependencies]
