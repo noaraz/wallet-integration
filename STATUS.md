@@ -1,6 +1,6 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-28 — Phase 03 merged ✅. Next focus: Phase 04 (Google Wallet pass).
+Last updated: 2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (Google Wallet pass).
 
 ## Current Focus
 
@@ -35,7 +35,7 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | Photo handler tests cover barcode presence/absence | ✅ |
 | Design doc + `phases/03-barcode-decode/plan.md` updated | ✅ |
 | `STATUS.md` updated, current focus → Phase 04 | ✅ |
-| PR merged to main | ⬜ |
+| PR #4 merged to main | ✅ |
 
 ## Phase 02 — Vision extraction ✅
 
