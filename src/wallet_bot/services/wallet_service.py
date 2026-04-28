@@ -9,6 +9,7 @@ from __future__ import annotations
 import hashlib
 import json
 import time
+import uuid
 
 from google.auth import crypt
 from google.auth import jwt as google_jwt
@@ -103,8 +104,6 @@ class WalletService:
         if raw:
             suffix = _stable_hash(raw)
         else:
-            import uuid
-
             suffix = uuid.uuid4().hex[:20]
         return f"{self._issuer_id}.{chat_id}_{suffix}"
 
