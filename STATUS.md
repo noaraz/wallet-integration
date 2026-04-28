@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (Google Wallet pass).
+Last updated: 2026-04-28 — Phase 04 implementation complete on `feat/phase-04-wallet-pass`. 175 tests green, lint clean, JWT validated. Ready for `/ship`.
 
 ## Current Focus
 
-**Phase 04 — Google Wallet pass** — not started. Brainstorm via `/superpowers:brainstorming` in a new session. Phase 03 shipped barcode extraction via Gemini Vision with 134 unit tests green (16 new tests added).
+**Phase 04 — Google Wallet pass** — 🔄 in progress. Implementation done on `feat/phase-04-wallet-pass`. Run `/ship` to open PR.
 
 ---
 
@@ -16,7 +16,7 @@ Last updated: 2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (
 | 01 | Telegram webhook | ✅ done |
 | 02 | Vision extraction | ✅ done |
 | 03 | Barcode decoding | ✅ done |
-| 04 | Google Wallet pass | ⬜ not started |
+| 04 | Google Wallet pass | 🔄 in progress |
 | 05 | End-to-end flow | ⬜ not started |
 | 06 | Observability & hardening | ⬜ not started |
 | 07 | Release pipeline | ⬜ not started |
@@ -24,6 +24,25 @@ Last updated: 2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (
 Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
+
+## Phase 04 — Google Wallet pass 🔄
+
+| Task | Status |
+|------|--------|
+| `google-auth` + `google-auth-httplib2` dependencies | ✅ |
+| `models/wallet.py` — `WalletObject`, `PassBundle` | ✅ |
+| `config.py` — `wallet_issuer_id`, `wallet_sa_json`, `wallet_origins` | ✅ |
+| `models/callback_ids.py` — `WALLET_GET_LINK`, `WALLET_BUNDLE_YES`, `WALLET_BUNDLE_NO` | ✅ |
+| `services/pass_store.py` — in-memory per-chat bundle tracker | ✅ |
+| `services/wallet_service.py` — object builder + RS256 JWT signer | ✅ |
+| `services/telegram_client.py` — `send_url_button` | ✅ |
+| `handlers/callback_handler.py` — full multi-ticket bundle flow | ✅ |
+| `handlers/start_handler.py` + `help_handler.py` — multi-ticket UX explained | ✅ |
+| `main.py` — `PassStore` + `WalletService` wired via FastAPI DI | ✅ |
+| 175 tests green, ruff lint clean | ✅ |
+| JWT structure validated by `wallet-jwt-validator` agent | ✅ |
+| PR opened + merged | ⬜ |
+| `wallet-pass-preview` skill created via `/superpowers:writing-skills` | ⬜ deferred |
 
 ## Phase 03 — Barcode decoding ✅
 
