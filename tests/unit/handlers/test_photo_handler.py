@@ -8,7 +8,7 @@ import pytest
 
 from wallet_bot.handlers._safe import GENERIC_ERROR_REPLY
 from wallet_bot.handlers.photo_handler import handle_photo
-from wallet_bot.models.ticket import ExtractedTicket
+from wallet_bot.models.ticket import BarcodeResult, ExtractedTicket
 from wallet_bot.services.draft_store import DraftStore
 from wallet_bot.services.vision_service import VisionExtractionError
 
@@ -107,3 +107,45 @@ async def test_download_failure_replies_generically(store) -> None:
 
     assert (1, GENERIC_ERROR_REPLY) in client.sent
     assert client.sent_with_keyboard == []
+
+
+async def test_draft_stores_barcode_when_present(fake_client, store) -> None:
+    ticket = ExtractedTicket(
+        event_name="גיא מזיג",
+        barcode=BarcodeResult(
+            barcode_type="QR_CODE",
+            barcode_value="https://ticket.example/abc",
+        ),
+    )
+    vision = _FakeVision(ticket)
+
+    await handle_photo(
+        chat_id=42,
+        client=fake_client,
+        file_id="PHOTO123",
+        vision=vision,
+        store=store,
+    )
+
+    draft = await store.get(42)
+    assert draft is not None
+    assert draft.ticket.barcode is not None
+    assert draft.ticket.barcode.barcode_type == "QR_CODE"
+    assert draft.ticket.barcode.barcode_value == "https://ticket.example/abc"
+
+
+async def test_draft_stores_none_barcode_when_absent(fake_client, store) -> None:
+    ticket = ExtractedTicket(event_name="גיא מזיג")  # barcode=None by default
+    vision = _FakeVision(ticket)
+
+    await handle_photo(
+        chat_id=42,
+        client=fake_client,
+        file_id="PHOTO456",
+        vision=vision,
+        store=store,
+    )
+
+    draft = await store.get(42)
+    assert draft is not None
+    assert draft.ticket.barcode is None
