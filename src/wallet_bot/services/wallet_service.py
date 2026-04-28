@@ -101,10 +101,7 @@ class WalletService:
 
     def _object_id(self, chat_id: int, ticket: ExtractedTicket) -> str:
         raw = (ticket.barcode.barcode_value if ticket.barcode else None) or ticket.ticket_id
-        if raw:
-            suffix = _stable_hash(raw)
-        else:
-            suffix = uuid.uuid4().hex[:20]
+        suffix = _stable_hash(raw) if raw else uuid.uuid4().hex[:20]
         return f"{self._issuer_id}.{chat_id}_{suffix}"
 
     def build_save_url(self, objects: list[WalletObject]) -> str:

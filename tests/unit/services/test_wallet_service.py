@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from wallet_bot.models.ticket import BarcodeResult, ExtractedTicket
 from wallet_bot.models.wallet import WalletObject
 
@@ -35,9 +37,6 @@ def _make_sa_json() -> str:
 
 
 ISSUER_ID = "3388000000012345678"
-
-
-import pytest
 
 
 @pytest.fixture

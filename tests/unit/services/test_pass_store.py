@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from wallet_bot.services.pass_store import PassStore
-
 from wallet_bot.models.wallet import PassBundle, WalletObject
+from wallet_bot.services.pass_store import PassStore
 
 
 def _obj(barcode: str | None = "B1") -> WalletObject:
