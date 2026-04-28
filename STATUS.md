@@ -25,6 +25,19 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
 
+## Phase 07 — Release pipeline ⬜
+
+Deferred items from earlier phases that belong here:
+
+| Task | Origin | Status |
+|------|--------|--------|
+| Cloud Run deploy (me-west1) | Phase 01 | ⬜ |
+| `deploy-cloud-run` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
+| `tg-webhook-register` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
+| `.claude/commands/release.md` + `RELEASING.md` | Phase 00 | ⬜ |
+
+---
+
 ## Phase 03 — Barcode decoding ✅
 
 | Task | Status |
@@ -83,19 +96,6 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | `tg-webhook-register` skill (via `/superpowers:writing-skills`) | → deferred to Phase 07 |
 | PR opened, CI green, merged to main | ✅ |
 
-## Phase 07 — Release pipeline ⬜
-
-Deferred items from earlier phases that belong here:
-
-| Task | Origin | Status |
-|------|--------|--------|
-| Cloud Run deploy (me-west1) | Phase 01 | ⬜ |
-| `deploy-cloud-run` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
-| `tg-webhook-register` skill (via `/superpowers:writing-skills`) | Phase 01 | ⬜ |
-| `.claude/commands/release.md` + `RELEASING.md` | Phase 00 | ⬜ |
-
----
-
 ## Phase 00 — Scaffold ✅
 
 | Task | Status |
@@ -107,7 +107,7 @@ Deferred items from earlier phases that belong here:
 | Phase folders (00–07) with plan.md + CLAUDE.md | ✅ |
 | Hooks (pre_edit_guard, post_python_edit, start) | ✅ |
 | `.claude/commands/{ship,new-phase}.md` | ✅ |
-| `.claude/commands/release.md` + `RELEASING.md` | ⬜ deferred to Phase 07 |
+| `.claude/commands/release.md` + `RELEASING.md` | → deferred to Phase 07 |
 | `.claude/agents/{reviewer,secret-scanner,wallet-jwt-validator}.md` | ✅ |
 | `.claude/skills/*` | ⬜ deferred — each skill created via `/superpowers:writing-skills` in the phase that needs it |
 | PR opened, CI green, merged to main | ✅ |
