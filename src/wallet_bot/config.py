@@ -20,8 +20,9 @@ def _split_ids(raw: str) -> list[int]:
 
 
 class _EnvWithCommaIds(EnvSettingsSource):
-    """EnvSettingsSource that treats ALLOWED_TG_USER_IDS as a plain string,
-    bypassing pydantic-settings' JSON-decode for list fields."""
+    """EnvSettingsSource that handles comma-separated list env vars
+    (ALLOWED_TG_USER_IDS, WALLET_ORIGINS) as plain strings, bypassing
+    pydantic-settings' JSON-decode for list fields."""
 
     def prepare_field_value(
         self,
@@ -30,7 +31,7 @@ class _EnvWithCommaIds(EnvSettingsSource):
         value: Any,
         value_is_complex: bool,
     ) -> Any:
-        if field_name in {"allowed_tg_user_ids"} and isinstance(value, str):
+        if field_name == "allowed_tg_user_ids" and isinstance(value, str):
             # Return the parsed list (possibly empty); field_validator below
             # will raise ValidationError for the empty case.
             return _split_ids(value)

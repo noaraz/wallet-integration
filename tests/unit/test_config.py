@@ -116,10 +116,7 @@ def test_gemini_only_settings_honours_model_override(monkeypatch):
 
 def test_wallet_config_defaults(monkeypatch):
     """Wallet fields are optional — existing envs don't break."""
-    monkeypatch.setenv("BOT_TOKEN", "123:fake")
-    monkeypatch.setenv("WEBHOOK_SECRET", "s")
-    monkeypatch.setenv("ALLOWED_TG_USER_IDS", "1")
-    monkeypatch.setenv("GEMINI_API_KEY", "g")
+    _make(monkeypatch)
     s = Settings(_env_file=None)
     assert s.wallet_issuer_id == ""
     assert s.wallet_sa_json is None
@@ -127,14 +124,13 @@ def test_wallet_config_defaults(monkeypatch):
 
 
 def test_wallet_config_from_env(monkeypatch):
-    monkeypatch.setenv("BOT_TOKEN", "123:fake")
-    monkeypatch.setenv("WEBHOOK_SECRET", "s")
-    monkeypatch.setenv("ALLOWED_TG_USER_IDS", "1")
-    monkeypatch.setenv("GEMINI_API_KEY", "g")
+    _make(monkeypatch)
     monkeypatch.setenv("WALLET_ISSUER_ID", "3388000000012345678")
     monkeypatch.setenv("WALLET_SA_JSON", '{"type":"service_account"}')
     monkeypatch.setenv("WALLET_ORIGINS", "https://example.com,https://bot.example.com")
     s = Settings(_env_file=None)
     assert s.wallet_issuer_id == "3388000000012345678"
     assert s.wallet_sa_json is not None
+    assert s.wallet_sa_json.get_secret_value() == '{"type":"service_account"}'
+    assert '{"type":"service_account"}' not in repr(s)
     assert s.wallet_origins == ["https://example.com", "https://bot.example.com"]
