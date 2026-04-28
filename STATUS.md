@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-27 — Phase 02 merged ✅. Next focus: Phase 03 (barcode decoding).
+Last updated: 2026-04-28 — Phase 03 merged ✅. Next focus: Phase 04 (Google Wallet pass).
 
 ## Current Focus
 
-**Phase 03 — Barcode decoding** — not started. Brainstorm via `/superpowers:brainstorming` in a new session. Phase 02 shipped via PR #3 with 118 unit tests, manual end-to-end verified, two post-review fixes (non-private callback ack + env access centralised in `config.py`).
+**Phase 04 — Google Wallet pass** — not started. Brainstorm via `/superpowers:brainstorming` in a new session. Phase 03 shipped barcode extraction via Gemini Vision with 134 unit tests green (16 new tests added).
 
 ---
 
@@ -15,7 +15,7 @@ Last updated: 2026-04-27 — Phase 02 merged ✅. Next focus: Phase 03 (barcode 
 | 00 | Scaffold | ✅ done |
 | 01 | Telegram webhook | 🔄 in PR |
 | 02 | Vision extraction | ✅ done |
-| 03 | Barcode decoding | ⬜ not started |
+| 03 | Barcode decoding | ✅ done |
 | 04 | Google Wallet pass | ⬜ not started |
 | 05 | End-to-end flow | ⬜ not started |
 | 06 | Observability & hardening | ⬜ not started |
@@ -24,6 +24,18 @@ Last updated: 2026-04-27 — Phase 02 merged ✅. Next focus: Phase 03 (barcode 
 Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
+
+## Phase 03 — Barcode decoding ✅
+
+| Task | Status |
+|------|--------|
+| `BarcodeResult` model + `ExtractedTicket.barcode` field | ✅ |
+| `barcode_value` excluded from approve log | ✅ |
+| `STRUCTURED_PROMPT` extended with barcode instruction | ✅ |
+| Photo handler tests cover barcode presence/absence | ✅ |
+| Design doc + `phases/03-barcode-decode/plan.md` updated | ✅ |
+| `STATUS.md` updated, current focus → Phase 04 | ✅ |
+| PR merged to main | ⬜ |
 
 ## Phase 02 — Vision extraction ✅
 
