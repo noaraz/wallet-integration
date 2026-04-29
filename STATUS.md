@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-28 — Phase 04 implementation complete on `feat/phase-04-wallet-pass`. 175 tests green, lint clean, JWT validated. Ready for `/ship`.
+Last updated: 2026-04-29 — Phase 04 merged ✅ (PR #5). Next focus: Phase 03 revision (pyzbar barcode decoding).
 
 ## Current Focus
 
-**Phase 04 — Google Wallet pass** — 🔄 in progress. Implementation done on `feat/phase-04-wallet-pass`. Run `/ship` to open PR.
+**Phase 03 revision — replace Gemini barcode extraction with `pyzbar`** — ⬜ not started. Start with `/superpowers:brainstorming` in a new session.
 
 ---
 
@@ -16,7 +16,7 @@ Last updated: 2026-04-28 — Phase 04 implementation complete on `feat/phase-04-
 | 01 | Telegram webhook | ✅ done |
 | 02 | Vision extraction | ✅ done |
 | 03 | Barcode decoding | ✅ done |
-| 04 | Google Wallet pass | 🔄 in progress |
+| 04 | Google Wallet pass | ✅ done |
 | 05 | End-to-end flow | ⬜ not started |
 | 06 | Observability & hardening | ⬜ not started |
 | 07 | Release pipeline | ⬜ not started |
@@ -41,10 +41,10 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | `main.py` — `PassStore` + `WalletService` wired via FastAPI DI | ✅ |
 | 175 tests green, ruff lint clean | ✅ |
 | JWT structure validated by `wallet-jwt-validator` agent | ✅ |
-| PR opened + merged | ⬜ |
+| PR opened + merged | ✅ |
 | `wallet-pass-preview` skill created via `/superpowers:writing-skills` | ⬜ deferred |
 
-## Phase 03 — Barcode decoding ✅
+## Phase 03 — Barcode decoding ✅ (revision pending)
 
 | Task | Status |
 |------|--------|
@@ -55,6 +55,9 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | Design doc + `phases/03-barcode-decode/plan.md` updated | ✅ |
 | `STATUS.md` updated, current focus → Phase 04 | ✅ |
 | PR #4 merged to main | ✅ |
+| **Revision needed:** replace Gemini barcode extraction with `pyzbar` | ⬜ |
+
+> **Why:** E2E testing showed Gemini reads QR code values inaccurately (visual OCR on binary pixel matrix). `pyzbar` decodes the exact binary payload reliably. Gemini should own human-readable text fields only; `pyzbar` should own `barcode_value` + `barcode_type`. Remove barcode instructions from the Gemini prompt.
 
 ## Phase 02 — Vision extraction ✅
 

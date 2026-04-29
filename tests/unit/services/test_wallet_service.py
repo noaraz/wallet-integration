@@ -40,14 +40,21 @@ ISSUER_ID = "3388000000012345678"
 
 
 @pytest.fixture
-def svc():
+def svc(monkeypatch):
     from wallet_bot.services.wallet_service import WalletService
 
-    return WalletService(
+    instance = WalletService(
         issuer_id=ISSUER_ID,
         sa_json=_make_sa_json(),
         origins=["https://example.com"],
     )
+
+    # Skip real HTTP calls in unit tests.
+    async def _noop(class_dict):  # type: ignore[type-arg]
+        pass
+
+    monkeypatch.setattr(instance, "_upsert_class", _noop)
+    return instance
 
 
 # ── build_object tests ────────────────────────────────────────────────────────
@@ -134,27 +141,27 @@ def test_build_object_different_chat_ids_differ(svc) -> None:
 # ── build_save_url tests ─────────────────────────────────────────────────────
 
 
-def test_build_save_url_format(svc) -> None:
+async def test_build_save_url_format(svc) -> None:
     ticket = ExtractedTicket(event_name="Concert", date="2026-06-01")
     obj = svc.build_object(chat_id=42, ticket=ticket)
-    url = svc.build_save_url([obj])
+    url = await svc.build_save_url([obj])
     assert url.startswith("https://pay.google.com/gp/v/save/")
 
 
-def test_build_save_url_jwt_has_three_parts(svc) -> None:
+async def test_build_save_url_jwt_has_three_parts(svc) -> None:
     ticket = ExtractedTicket(event_name="Concert", date="2026-06-01")
     obj = svc.build_object(chat_id=42, ticket=ticket)
-    url = svc.build_save_url([obj])
+    url = await svc.build_save_url([obj])
     jwt_part = url.removeprefix("https://pay.google.com/gp/v/save/")
     assert jwt_part.count(".") == 2
 
 
-def test_build_save_url_payload_claims(svc) -> None:
+async def test_build_save_url_payload_claims(svc) -> None:
     import base64
 
     ticket = ExtractedTicket(event_name="Concert", date="2026-06-01")
     obj = svc.build_object(chat_id=42, ticket=ticket)
-    url = svc.build_save_url([obj])
+    url = await svc.build_save_url([obj])
     jwt_part = url.removeprefix("https://pay.google.com/gp/v/save/")
     _, payload_b64, _ = jwt_part.split(".")
     payload_b64 += "=" * (-len(payload_b64) % 4)
@@ -168,7 +175,7 @@ def test_build_save_url_payload_claims(svc) -> None:
     assert len(payload["payload"]["eventTicketObjects"]) == 1
 
 
-def test_build_save_url_multiple_objects(svc) -> None:
+async def test_build_save_url_multiple_objects(svc) -> None:
     import base64
 
     ticket1 = ExtractedTicket(
@@ -185,7 +192,7 @@ def test_build_save_url_multiple_objects(svc) -> None:
         svc.build_object(chat_id=42, ticket=ticket1),
         svc.build_object(chat_id=42, ticket=ticket2),
     ]
-    url = svc.build_save_url(objects)
+    url = await svc.build_save_url(objects)
     jwt_part = url.removeprefix("https://pay.google.com/gp/v/save/")
     _, payload_b64, _ = jwt_part.split(".")
     payload_b64 += "=" * (-len(payload_b64) % 4)

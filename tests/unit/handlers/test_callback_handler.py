@@ -241,7 +241,7 @@ class FakeWalletService:
             barcode_value=ticket.barcode.barcode_value if ticket.barcode else None,
         )
 
-    def build_save_url(self, objects: list[WalletObject]) -> str:
+    async def build_save_url(self, objects: list[WalletObject]) -> str:
         return f"https://pay.google.com/gp/v/save/fake_jwt_{len(objects)}"
 
 

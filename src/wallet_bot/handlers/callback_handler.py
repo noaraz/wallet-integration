@@ -74,7 +74,7 @@ async def handle_callback(
         if bundle is None or not bundle.objects:
             await client.send_text(chat_id, "No active bundle. Send a ticket photo first.")
             return
-        save_url = wallet_service.build_save_url(bundle.objects)
+        save_url = await wallet_service.build_save_url(bundle.objects)
         await client.send_url_button(
             chat_id, "Your pass is ready!", "Add to Google Wallet", save_url
         )

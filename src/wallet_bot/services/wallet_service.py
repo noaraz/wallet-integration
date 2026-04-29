@@ -8,14 +8,24 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import time
+import urllib.parse
 import uuid
 
+import httpx
 from google.auth import crypt
 from google.auth import jwt as google_jwt
+from google.auth.transport.requests import Request as GoogleRequest
+from google.oauth2 import service_account
 
 from wallet_bot.models.ticket import ExtractedTicket
 from wallet_bot.models.wallet import WalletObject
+
+_logger = logging.getLogger(__name__)
+
+_WALLET_API = "https://walletobjects.googleapis.com/walletobjects/v1"
+_WALLET_SCOPES = ["https://www.googleapis.com/auth/wallet_object.issuer"]
 
 _BARCODE_TYPE_MAP: dict[str, str] = {
     "QR_CODE": "QR_CODE",
@@ -28,6 +38,49 @@ _BARCODE_TYPE_MAP: dict[str, str] = {
     "PDF417": "PDF_417",
 }
 _DEFAULT_BARCODE_TYPE = "QR_CODE"
+
+# Deep indigo — distinctive concert-ticket colour, readable on white barcode.
+_PASS_BACKGROUND_COLOR = "#1A237E"
+
+_CLASS_TEMPLATE = {
+    "cardTemplateOverride": {
+        "cardRowTemplateInfos": [
+            {
+                "twoItems": {
+                    "startItem": {
+                        "firstValue": {
+                            "fields": [{"fieldPath": "object.textModulesData['datetime']"}]
+                        }
+                    },
+                    "endItem": {
+                        "firstValue": {"fields": [{"fieldPath": "object.textModulesData['venue']"}]}
+                    },
+                }
+            },
+            {
+                "twoItems": {
+                    "startItem": {
+                        "firstValue": {
+                            "fields": [{"fieldPath": "object.textModulesData['venue_address']"}]
+                        }
+                    },
+                    "endItem": {
+                        "firstValue": {"fields": [{"fieldPath": "object.textModulesData['order']"}]}
+                    },
+                }
+            },
+            {
+                "oneItem": {
+                    "item": {
+                        "firstValue": {
+                            "fields": [{"fieldPath": "object.textModulesData['holder']"}]
+                        }
+                    }
+                }
+            },
+        ]
+    }
+}
 
 
 def _stable_hash(text: str) -> str:
@@ -47,6 +100,9 @@ class WalletService:
     ) -> None:
         info = json.loads(sa_json)
         self._signer = crypt.RSASigner.from_service_account_info(info)
+        self._creds = service_account.Credentials.from_service_account_info(
+            info, scopes=_WALLET_SCOPES
+        )
         self._issuer_id = issuer_id
         self._issuer_email: str = info["client_email"]
         self._origins = origins
@@ -77,6 +133,23 @@ class WalletService:
                 "section": {"defaultValue": {"language": "iw", "value": ticket.section}}
             }
 
+        text_modules = []
+        if ticket.date or ticket.time:
+            body = " ".join(filter(None, [ticket.date, ticket.time]))
+            text_modules.append({"header": "תאריך ושעה", "body": body, "id": "datetime"})
+        if ticket.venue:
+            text_modules.append({"header": "מקום", "body": ticket.venue, "id": "venue"})
+        if ticket.venue_address:
+            text_modules.append(
+                {"header": "כתובת", "body": ticket.venue_address, "id": "venue_address"}
+            )
+        if ticket.holder_name:
+            text_modules.append({"header": "שם", "body": ticket.holder_name, "id": "holder"})
+        if ticket.order_number:
+            text_modules.append({"header": "הזמנה", "body": ticket.order_number, "id": "order"})
+        if text_modules:
+            obj["textModulesData"] = text_modules
+
         # Barcode: omit entirely when value is absent — it is an optional field.
         if ticket.barcode and ticket.barcode.barcode_value:
             obj["barcode"] = {
@@ -104,8 +177,56 @@ class WalletService:
         suffix = _stable_hash(raw) if raw else uuid.uuid4().hex[:20]
         return f"{self._issuer_id}.{chat_id}_{suffix}"
 
-    def build_save_url(self, objects: list[WalletObject]) -> str:
+    def _build_class_dict(self, class_id: str, event_name: str | None) -> dict:  # type: ignore[type-arg]
+        d: dict = {  # type: ignore[type-arg]
+            "id": class_id,
+            "issuerName": "Wallet Bot",
+            "reviewStatus": "UNDER_REVIEW",
+            "hexBackgroundColor": _PASS_BACKGROUND_COLOR,
+            "classTemplateInfo": _CLASS_TEMPLATE,
+        }
+        if event_name:
+            d["eventName"] = {"defaultValue": {"language": "iw", "value": event_name}}
+        return d
+
+    def _auth_token(self) -> str:
+        if not self._creds.valid:
+            self._creds.refresh(GoogleRequest())
+        return self._creds.token  # type: ignore[return-value]
+
+    async def _upsert_class(self, class_dict: dict) -> None:  # type: ignore[type-arg]
+        """Create or update the class so classTemplateInfo and colour always apply."""
+        encoded_id = urllib.parse.quote(class_dict["id"], safe="")
+        base_url = f"{_WALLET_API}/eventTicketClass"
+        try:
+            headers = {
+                "Authorization": f"Bearer {self._auth_token()}",
+                "Content-Type": "application/json",
+            }
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.patch(
+                    f"{base_url}/{encoded_id}", json=class_dict, headers=headers
+                )
+                if resp.status_code == 404:
+                    resp = await client.post(base_url, json=class_dict, headers=headers)
+            if resp.status_code not in (200, 201):
+                _logger.warning("class upsert %s: %s", resp.status_code, resp.text[:200])
+        except Exception as exc:
+            _logger.warning("class upsert failed (non-fatal): %s", exc)
+
+    async def build_save_url(self, objects: list[WalletObject]) -> str:
         """Sign a savetowallet JWT and return the Google Wallet save URL."""
+        seen_classes: dict[str, dict] = {}  # type: ignore[type-arg]
+        for obj in objects:
+            if obj.class_id not in seen_classes:
+                event_name = (
+                    obj.object_dict.get("eventName", {}).get("defaultValue", {}).get("value")
+                )
+                seen_classes[obj.class_id] = self._build_class_dict(obj.class_id, event_name)
+
+        for class_dict in seen_classes.values():
+            await self._upsert_class(class_dict)
+
         payload = {
             "iss": self._issuer_email,
             "aud": "google",
@@ -113,6 +234,7 @@ class WalletService:
             "iat": int(time.time()),
             "origins": self._origins,
             "payload": {
+                "eventTicketClasses": list(seen_classes.values()),
                 "eventTicketObjects": [obj.object_dict for obj in objects],
             },
         }
