@@ -6,12 +6,14 @@ Prod (Phase 07+): migrate to ADC / IAM signing; ``sa_json`` can be None.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import logging
 import time
 import urllib.parse
 import uuid
+from typing import Protocol
 
 import httpx
 from google.auth import crypt
@@ -89,6 +91,12 @@ def _stable_hash(text: str) -> str:
 
 def _map_barcode_type(raw: str) -> str:
     return _BARCODE_TYPE_MAP.get(raw.upper(), _DEFAULT_BARCODE_TYPE)
+
+
+class WalletServiceProtocol(Protocol):
+    def build_object(self, chat_id: int, ticket: ExtractedTicket) -> WalletObject: ...
+
+    async def build_save_url(self, objects: list[WalletObject]) -> str: ...
 
 
 class WalletService:
@@ -189,9 +197,9 @@ class WalletService:
             d["eventName"] = {"defaultValue": {"language": "iw", "value": event_name}}
         return d
 
-    def _auth_token(self) -> str:
+    async def _auth_token(self) -> str:
         if not self._creds.valid:
-            self._creds.refresh(GoogleRequest())
+            await asyncio.to_thread(self._creds.refresh, GoogleRequest())
         return self._creds.token  # type: ignore[return-value]
 
     async def _upsert_class(self, class_dict: dict) -> None:  # type: ignore[type-arg]
@@ -200,7 +208,7 @@ class WalletService:
         base_url = f"{_WALLET_API}/eventTicketClass"
         try:
             headers = {
-                "Authorization": f"Bearer {self._auth_token()}",
+                "Authorization": f"Bearer {await self._auth_token()}",
                 "Content-Type": "application/json",
             }
             async with httpx.AsyncClient(timeout=10) as client:
@@ -211,7 +219,7 @@ class WalletService:
                     resp = await client.post(base_url, json=class_dict, headers=headers)
             if resp.status_code not in (200, 201):
                 _logger.warning("class upsert %s: %s", resp.status_code, resp.text[:200])
-        except Exception as exc:
+        except httpx.RequestError as exc:
             _logger.warning("class upsert failed (non-fatal): %s", exc)
 
     async def build_save_url(self, objects: list[WalletObject]) -> str:

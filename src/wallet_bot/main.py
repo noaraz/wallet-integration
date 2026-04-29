@@ -1,8 +1,8 @@
 """FastAPI application — webhook handler and DI wiring.
 
-Wires the Phase-02 routes:
+Routes:
 
-* ``/start``, ``/help`` — Phase-01 commands (unchanged)
+* ``/start``, ``/help`` — slash commands
 * Photo in a private chat → download → Gemini Vision → editable draft
 * ``callback_query`` (inline-button tap) → :func:`handle_callback`
 * Text in private chat while a draft is in edit-mode → :func:`handle_edit_reply`

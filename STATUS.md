@@ -25,7 +25,7 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
 
-## Phase 04 — Google Wallet pass 🔄
+## Phase 04 — Google Wallet pass ✅
 
 | Task | Status |
 |------|--------|

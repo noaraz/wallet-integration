@@ -18,7 +18,7 @@ from wallet_bot.models.wallet import PassBundle
 from wallet_bot.services.draft_store import DraftStore
 from wallet_bot.services.pass_store import PassStore
 from wallet_bot.services.telegram_client import InlineButton, TelegramClientProtocol
-from wallet_bot.services.wallet_service import WalletService
+from wallet_bot.services.wallet_service import WalletServiceProtocol
 
 _logger = logging.getLogger(__name__)
 _CANCELLED_MSG = "Cancelled."
@@ -57,7 +57,7 @@ async def handle_callback(
     callback_data: str,
     store: DraftStore,
     pass_store: PassStore | None = None,
-    wallet_service: WalletService | None = None,
+    wallet_service: WalletServiceProtocol | None = None,
 ) -> None:
     await client.answer_callback_query(callback_query_id=callback_query_id)
 
@@ -113,13 +113,6 @@ async def handle_callback(
 
     if cb is CallbackId.APPROVE:
         ticket = draft.ticket
-        _logger.info(
-            "ticket_approved %s",
-            json.dumps(
-                ticket.model_dump(exclude={"raw_text": True, "barcode": {"barcode_value"}}),
-                ensure_ascii=False,
-            ),
-        )
 
         if wallet_service is None or pass_store is None:
             await store.clear(chat_id)
@@ -128,6 +121,14 @@ async def handle_callback(
                 "Wallet not configured. Set WALLET_ISSUER_ID and WALLET_SA_JSON.",
             )
             return
+
+        _logger.info(
+            "ticket_approved %s",
+            json.dumps(
+                ticket.model_dump(exclude={"raw_text": True, "barcode": {"barcode_value"}}),
+                ensure_ascii=False,
+            ),
+        )
 
         # Build BEFORE clearing draft — a build failure leaves draft intact for retry.
         wallet_obj = wallet_service.build_object(chat_id, ticket)
@@ -189,7 +190,6 @@ async def handle_callback(
             )
             return
 
-        # No match
         label = _event_label(ticket)
         await client.send_text(
             chat_id,

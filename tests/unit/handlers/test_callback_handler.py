@@ -10,8 +10,11 @@ import pytest
 
 from wallet_bot.handlers._safe import GENERIC_ERROR_REPLY
 from wallet_bot.handlers.callback_handler import handle_callback
+from wallet_bot.models.callback_ids import CallbackId
 from wallet_bot.models.ticket import BarcodeResult, DraftState, ExtractedTicket
+from wallet_bot.models.wallet import WalletObject
 from wallet_bot.services.draft_store import DraftStore
+from wallet_bot.services.pass_store import PassStore
 
 
 def _draft(chat_id: int = 42, message_id: int = 99) -> DraftState:
@@ -94,6 +97,8 @@ async def test_edit_button_does_not_redundantly_edit_draft_message(
 
 
 async def test_approve_logs_ticket_and_clears_draft(fake_client, store_with_draft, caplog) -> None:
+    ps = PassStore()
+    wsvc = FakeWalletService()
     with caplog.at_level(logging.INFO):
         await handle_callback(
             chat_id=42,
@@ -101,14 +106,14 @@ async def test_approve_logs_ticket_and_clears_draft(fake_client, store_with_draf
             callback_query_id="cb1",
             callback_data="approve",
             store=store_with_draft,
+            pass_store=ps,
+            wallet_service=wsvc,
         )
 
     assert fake_client.answered == ["cb1"]
 
-    # Confirmation reply to user.
-    assert any(
-        "wallet" in text.lower() or "got it" in text.lower() for _cid, text in fake_client.sent
-    )
+    # Confirmation sent via inline keyboard.
+    assert len(fake_client.sent_with_keyboard) == 1
 
     # Exactly one "ticket_approved" log line, carrying JSON without raw_text.
     approval_lines = [r for r in caplog.records if "ticket_approved" in r.getMessage()]
@@ -193,6 +198,8 @@ async def test_approve_excludes_barcode_value_from_log(fake_client, caplog) -> N
             callback_query_id="cb1",
             callback_data="approve",
             store=store,
+            pass_store=PassStore(),
+            wallet_service=FakeWalletService(),
         )
 
     approval_lines = [r for r in caplog.records if "ticket_approved" in r.getMessage()]
@@ -207,10 +214,6 @@ async def test_approve_excludes_barcode_value_from_log(fake_client, caplog) -> N
 
 
 # ── wallet bundle flow ────────────────────────────────────────────────────────
-
-from wallet_bot.models.callback_ids import CallbackId  # noqa: E402
-from wallet_bot.models.wallet import WalletObject  # noqa: E402
-from wallet_bot.services.pass_store import PassStore  # noqa: E402
 
 
 def _approved_ticket(
