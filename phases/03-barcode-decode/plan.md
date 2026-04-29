@@ -44,4 +44,9 @@ Total: 134 tests green.
 - [x] `/superpowers:brainstorming`
 - [x] `/superpowers:writing-plans`
 - [x] `/superpowers:test-driven-development`
-- [ ] `/ship`
+- [x] `/ship`
+
+## Revision (2026-04-29) — zxing-cpp
+
+Original Gemini approach replaced with `zxingcpp` + `BarcodeDecoderProtocol` facade.
+See `features/barcode-extraction/` for canonical docs. PR #6.

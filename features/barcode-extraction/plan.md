@@ -48,7 +48,7 @@ facade for easy swapping.
 - Passes `decoder=get_decoder(request)` to `handle_photo`
 
 ### Tests
-- New `tests/unit/services/test_barcode_service.py` (8 tests, zxing_cpp mocked)
+- New `tests/unit/services/test_barcode_service.py` (9 tests, zxingcpp mocked)
 - `tests/unit/services/test_gemini_vision.py` — removed 3 stale barcode tests; added 2 new
 - `tests/unit/handlers/test_photo_handler.py` — added `_FakeDecoder`; updated all calls; added 2 new tests
 - `tests/unit/test_webhook_phase02.py` — added `patched_decoder` autouse fixture
@@ -58,6 +58,13 @@ facade for easy swapping.
 ## Verification
 
 ```bash
-docker compose run --rm bot pytest -v          # 184 tests, all green
+docker compose run --rm bot pytest -v          # 185 tests, all green
 docker compose run --rm bot ruff check src/ tests/   # no issues
 ```
+
+## Post-ship fixes (same PR)
+
+- `zxingcpp` module rename: PyPI package `zxing-cpp` v3 ships as `zxingcpp` (no underscore) — updated import and all patch targets
+- `_decode_sync` error handling: `Image.open` + `read_barcodes` wrapped in `try/except` → returns `None` on corrupt images
+- PIL context manager: `with Image.open(...) as img`
+- `scripts/eval_barcode.py` — standalone decode tool + wallet pass QR image output
