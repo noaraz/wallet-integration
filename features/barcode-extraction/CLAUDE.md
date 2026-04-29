@@ -47,9 +47,14 @@ See `callback_handler.py` for the log exclusion pattern.
 | `src/wallet_bot/handlers/photo_handler.py` | Calls `decoder.decode(image_bytes)` after `vision.extract`; sets `ticket.barcode` |
 | `src/wallet_bot/main.py` | Lazy-init `barcode_decoder` on `app.state`; `get_decoder()` dependency |
 | `src/wallet_bot/models/ticket.py` | `BarcodeResult(barcode_type, barcode_value)`; `barcode_value` normalised to `None` if empty |
-| `tests/unit/services/test_barcode_service.py` | Unit tests for `ZxingBarcodeDecoder` (zxing_cpp mocked) |
+| `tests/unit/services/test_barcode_service.py` | Unit tests for `ZxingBarcodeDecoder` (zxingcpp mocked) |
+| `scripts/eval_barcode.py` | Standalone decode tool — prints wallet pass barcode type/value and saves QR image |
 
 ## Gotchas
+
+**`zxingcpp` module name (not `zxing_cpp`)**
+The PyPI package is `zxing-cpp` but the Python module shipped in v3 is `zxingcpp` (no
+underscore). Test patches must target `wallet_bot.services.barcode_service.zxingcpp`.
 
 **`_ZXING_FORMAT_MAP` in `barcode_service.py`**
 Maps zxing-cpp CamelCase format names (`"QRCode"`, `"Code128"`, `"PDF417"`) to the

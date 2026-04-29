@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-29 — Phase 04 merged ✅ (PR #5). Phase 03 revision (zxing-cpp barcode decoding) in progress on `feat/barcode-zxing-cpp`.
+Last updated: 2026-04-29 — Phase 03 revision merged ✅ (PR #6). Next focus: Phase 05 (end-to-end flow).
 
 ## Current Focus
 
-**Phase 03 revision — replace Gemini barcode extraction with `zxing-cpp`** — 🔄 in progress on `feat/barcode-zxing-cpp`.
+**Phase 05 — End-to-end flow** — ⬜ not started. Start with `/superpowers:brainstorming` in a new session.
 
 ---
 
@@ -55,8 +55,11 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | Design doc + `phases/03-barcode-decode/plan.md` updated | ✅ |
 | `STATUS.md` updated, current focus → Phase 04 | ✅ |
 | PR #4 merged to main | ✅ |
-| **Revision:** replace Gemini barcode extraction with `zxing-cpp` + `BarcodeDecoderProtocol` facade | 🔄 |
-| Create `features/barcode-extraction/` canonical docs | 🔄 |
+| **Revision:** replace Gemini barcode extraction with `zxingcpp` + `BarcodeDecoderProtocol` facade | ✅ |
+| Create `features/barcode-extraction/` canonical docs | ✅ |
+| `zxingcpp` v3 module rename (was `zxing_cpp`), error handling in `_decode_sync` | ✅ |
+| `scripts/eval_barcode.py` — standalone barcode decode + wallet pass QR preview | ✅ |
+| PR #6 merged to main | ✅ |
 | Create `features/<name>/` docs for remaining features (vision-extraction, telegram-webhook, wallet-pass) | ⬜ |
 
 > **Why:** E2E testing showed Gemini reads QR code values inaccurately (visual OCR on binary pixel matrix). `zxing-cpp` decodes the exact binary payload reliably. Gemini should own human-readable text fields only; the barcode decoder should own `barcode_value` + `barcode_type`. Barcode instructions removed from the Gemini prompt.
