@@ -32,6 +32,10 @@ from wallet_bot.handlers.edit_reply_handler import handle_edit_reply
 from wallet_bot.handlers.help_handler import handle_help
 from wallet_bot.handlers.photo_handler import handle_photo
 from wallet_bot.handlers.start_handler import handle_start
+from wallet_bot.services.barcode_service import (
+    BarcodeDecoderProtocol,
+    create_default_decoder,
+)
 from wallet_bot.services.draft_store import DraftStore, get_default_store
 from wallet_bot.services.pass_store import PassStore
 from wallet_bot.services.telegram_client import TelegramClient, TelegramClientProtocol
@@ -70,8 +74,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     else:
         app.state.wallet_service = None
     # Lazily built on first webhook call so tests can monkey-patch
-    # ``create_default_service`` *after* startup.
+    # ``create_default_service`` / ``create_default_decoder`` *after* startup.
     app.state.vision_service = None
+    app.state.barcode_decoder = None
     yield
 
 
@@ -103,6 +108,14 @@ def get_vision(request: Request, settings: Settings) -> VisionServiceProtocol:
         )
         request.app.state.vision_service = svc
     return svc  # type: ignore[no-any-return]
+
+
+def get_decoder(request: Request) -> BarcodeDecoderProtocol:
+    dec = request.app.state.barcode_decoder
+    if dec is None:
+        dec = create_default_decoder()
+        request.app.state.barcode_decoder = dec
+    return dec  # type: ignore[no-any-return]
 
 
 @app.get("/healthz")
@@ -195,11 +208,13 @@ async def webhook(
         if file_id is None:
             return {"ok": "true"}
         vision = get_vision(request, settings)
+        decoder = get_decoder(request)
         await handle_photo(
             chat_id=chat_id,
             client=client,
             file_id=file_id,
             vision=vision,
+            decoder=decoder,
             store=store,
         )
         return {"ok": "true"}

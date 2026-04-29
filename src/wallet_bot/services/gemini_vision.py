@@ -35,11 +35,7 @@ RAW_TEXT_PROMPT = (
 STRUCTURED_PROMPT = (
     "Extract ticket fields from this image. Preserve Hebrew text verbatim. "
     "Leave a field null when the value is not clearly present — never guess. "
-    "Return raw_text as the full transcribed reading-order dump of the ticket. "
-    "If the ticket contains a QR code, barcode, or any machine-readable symbol, "
-    "set barcode_type to the format name (e.g. QR_CODE, CODE_128, AZTEC) and "
-    "barcode_value to its decoded payload. "
-    "If none is visible or readable, omit the barcode field entirely."
+    "Return raw_text as the full transcribed reading-order dump of the ticket."
 )
 
 
@@ -171,14 +167,15 @@ class GeminiVisionService:
             raise VisionExtractionError("gemini call failed") from e
 
         # Prefer SDK-parsed model if present; fall back to JSON decode.
+        # Barcode is decoded by barcode_service, not Gemini — always clear it.
         parsed = getattr(response, "parsed", None)
         if isinstance(parsed, ExtractedTicket):
-            return parsed
+            return parsed.model_copy(update={"barcode": None})
         try:
             payload = json.loads(response.text or "{}")
         except json.JSONDecodeError as e:
             raise VisionExtractionError("gemini returned unparseable JSON") from e
         try:
-            return ExtractedTicket.model_validate(payload)
+            return ExtractedTicket.model_validate(payload).model_copy(update={"barcode": None})
         except Exception as e:
             raise VisionExtractionError("gemini response did not match schema") from e

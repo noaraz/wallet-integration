@@ -47,6 +47,9 @@ src/wallet_bot/
 
 Each handler must be unit-testable with only fake services — no live Telegram instance required.
 
+**Feature documentation:** Per-feature decisions, gotchas, and key files live under
+`features/<name>/CLAUDE.md`. Current features: [`features/barcode-extraction/`](features/barcode-extraction/CLAUDE.md).
+
 ---
 
 ## Best practices
