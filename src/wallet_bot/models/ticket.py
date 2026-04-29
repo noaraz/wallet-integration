@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class BarcodeResult(BaseModel):
-    """Barcode or QR payload decoded from the ticket image by Gemini Vision."""
+    """Barcode or QR payload decoded from the ticket image by the barcode decoder."""
 
     barcode_type: str
     barcode_value: str | None = None

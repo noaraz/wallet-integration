@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-29 — Phase 04 merged ✅ (PR #5). Next focus: Phase 03 revision (pyzbar barcode decoding).
+Last updated: 2026-04-29 — Phase 04 merged ✅ (PR #5). Phase 03 revision (zxing-cpp barcode decoding) in progress on `feat/barcode-zxing-cpp`.
 
 ## Current Focus
 
-**Phase 03 revision — replace Gemini barcode extraction with `pyzbar`** — ⬜ not started. Start with `/superpowers:brainstorming` in a new session.
+**Phase 03 revision — replace Gemini barcode extraction with `zxing-cpp`** — 🔄 in progress on `feat/barcode-zxing-cpp`.
 
 ---
 
@@ -44,20 +44,22 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | PR opened + merged | ✅ |
 | `wallet-pass-preview` skill created via `/superpowers:writing-skills` | ⬜ deferred |
 
-## Phase 03 — Barcode decoding ✅ (revision pending)
+## Phase 03 — Barcode decoding ✅ (revision in progress)
 
 | Task | Status |
 |------|--------|
 | `BarcodeResult` model + `ExtractedTicket.barcode` field | ✅ |
 | `barcode_value` excluded from approve log | ✅ |
-| `STRUCTURED_PROMPT` extended with barcode instruction | ✅ |
+| `STRUCTURED_PROMPT` extended with barcode instruction | ✅ (original) |
 | Photo handler tests cover barcode presence/absence | ✅ |
 | Design doc + `phases/03-barcode-decode/plan.md` updated | ✅ |
 | `STATUS.md` updated, current focus → Phase 04 | ✅ |
 | PR #4 merged to main | ✅ |
-| **Revision needed:** replace Gemini barcode extraction with `pyzbar` | ⬜ |
+| **Revision:** replace Gemini barcode extraction with `zxing-cpp` + `BarcodeDecoderProtocol` facade | 🔄 |
+| Create `features/barcode-extraction/` canonical docs | 🔄 |
+| Create `features/<name>/` docs for remaining features (vision-extraction, telegram-webhook, wallet-pass) | ⬜ |
 
-> **Why:** E2E testing showed Gemini reads QR code values inaccurately (visual OCR on binary pixel matrix). `pyzbar` decodes the exact binary payload reliably. Gemini should own human-readable text fields only; `pyzbar` should own `barcode_value` + `barcode_type`. Remove barcode instructions from the Gemini prompt.
+> **Why:** E2E testing showed Gemini reads QR code values inaccurately (visual OCR on binary pixel matrix). `zxing-cpp` decodes the exact binary payload reliably. Gemini should own human-readable text fields only; the barcode decoder should own `barcode_value` + `barcode_type`. Barcode instructions removed from the Gemini prompt.
 
 ## Phase 02 — Vision extraction ✅
 

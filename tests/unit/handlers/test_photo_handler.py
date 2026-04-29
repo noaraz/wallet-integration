@@ -1,4 +1,4 @@
-"""Tests for handle_photo — download → extract → render draft with keyboard."""
+"""Tests for handle_photo — download → extract → decode → render draft with keyboard."""
 
 from __future__ import annotations
 
@@ -11,6 +11,19 @@ from wallet_bot.handlers.photo_handler import handle_photo
 from wallet_bot.models.ticket import BarcodeResult, ExtractedTicket
 from wallet_bot.services.draft_store import DraftStore
 from wallet_bot.services.vision_service import VisionExtractionError
+
+
+class _FakeDecoder:
+    def __init__(self, result: BarcodeResult | None = None) -> None:
+        self._result = result
+        self.calls: list[bytes] = []
+
+    async def decode(self, image_bytes: bytes) -> BarcodeResult | None:
+        self.calls.append(image_bytes)
+        return self._result
+
+
+_no_barcode_decoder = _FakeDecoder()
 
 
 class _FakeVision:
@@ -41,6 +54,7 @@ async def test_typing_indicator_is_sent_before_extraction(fake_client, store) ->
         client=fake_client,
         file_id="PHOTO123",
         vision=vision,
+        decoder=_no_barcode_decoder,
         store=store,
     )
 
@@ -57,6 +71,7 @@ async def test_happy_path_stores_draft_and_sends_keyboard(fake_client, store) ->
         client=fake_client,
         file_id="PHOTO123",
         vision=vision,
+        decoder=_no_barcode_decoder,
         store=store,
     )
 
@@ -85,6 +100,7 @@ async def test_vision_error_replies_generically(fake_client, store) -> None:
         client=fake_client,
         file_id="X",
         vision=vision,
+        decoder=_no_barcode_decoder,
         store=store,
     )
 
@@ -103,27 +119,32 @@ async def test_download_failure_replies_generically(store) -> None:
     client.download_photo_bytes = AsyncMock(side_effect=RuntimeError("TG down"))  # type: ignore[method-assign]
 
     vision = _FakeVision(ExtractedTicket())
-    await handle_photo(chat_id=1, client=client, file_id="X", vision=vision, store=store)
+    await handle_photo(
+        chat_id=1,
+        client=client,
+        file_id="X",
+        vision=vision,
+        decoder=_no_barcode_decoder,
+        store=store,
+    )
 
     assert (1, GENERIC_ERROR_REPLY) in client.sent
     assert client.sent_with_keyboard == []
 
 
-async def test_draft_stores_barcode_when_present(fake_client, store) -> None:
-    ticket = ExtractedTicket(
-        event_name="גיא מזיג",
-        barcode=BarcodeResult(
-            barcode_type="QR_CODE",
-            barcode_value="https://ticket.example/abc",
-        ),
-    )
+async def test_draft_stores_barcode_from_decoder(fake_client, store) -> None:
+    """Barcode comes from the decoder, not from vision."""
+    barcode = BarcodeResult(barcode_type="QR_CODE", barcode_value="https://ticket.example/abc")
+    ticket = ExtractedTicket(event_name="גיא מזיג")
     vision = _FakeVision(ticket)
+    decoder = _FakeDecoder(barcode)
 
     await handle_photo(
         chat_id=42,
         client=fake_client,
         file_id="PHOTO123",
         vision=vision,
+        decoder=decoder,
         store=store,
     )
 
@@ -135,7 +156,7 @@ async def test_draft_stores_barcode_when_present(fake_client, store) -> None:
 
 
 async def test_draft_stores_none_barcode_when_absent(fake_client, store) -> None:
-    ticket = ExtractedTicket(event_name="גיא מזיג")  # barcode=None by default
+    ticket = ExtractedTicket(event_name="גיא מזיג")
     vision = _FakeVision(ticket)
 
     await handle_photo(
@@ -143,9 +164,50 @@ async def test_draft_stores_none_barcode_when_absent(fake_client, store) -> None
         client=fake_client,
         file_id="PHOTO456",
         vision=vision,
+        decoder=_no_barcode_decoder,
         store=store,
     )
 
     draft = await store.get(42)
     assert draft is not None
     assert draft.ticket.barcode is None
+
+
+async def test_photo_handler_sets_barcode_from_decoder(fake_client, store) -> None:
+    """Decoder result is merged into the ticket before storing the draft."""
+    barcode = BarcodeResult(barcode_type="QR_CODE", barcode_value="https://ticket.example/xyz")
+    ticket = ExtractedTicket(event_name="גיא מזיג")
+    vision = _FakeVision(ticket)
+    decoder = _FakeDecoder(barcode)
+
+    await handle_photo(
+        chat_id=42,
+        client=fake_client,
+        file_id="PHOTO123",
+        vision=vision,
+        decoder=decoder,
+        store=store,
+    )
+
+    draft = await store.get(42)
+    assert draft is not None
+    assert draft.ticket.barcode == barcode
+
+
+async def test_photo_handler_passes_same_image_bytes_to_decoder(fake_client, store) -> None:
+    """Decoder receives the same bytes that vision received."""
+    ticket = ExtractedTicket(event_name="גיא מזיג")
+    vision = _FakeVision(ticket)
+    decoder = _FakeDecoder()
+
+    await handle_photo(
+        chat_id=42,
+        client=fake_client,
+        file_id="PHOTO123",
+        vision=vision,
+        decoder=decoder,
+        store=store,
+    )
+
+    assert len(decoder.calls) == 1
+    assert decoder.calls[0] == vision.calls[0][0]

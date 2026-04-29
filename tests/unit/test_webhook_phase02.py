@@ -78,6 +78,18 @@ def patched_vision(monkeypatch):
     return fake
 
 
+@pytest.fixture(autouse=True)
+def patched_decoder(monkeypatch):
+    """Patch the barcode-decoder factory so webhook tests never call zxing_cpp."""
+    fake = AsyncMock()
+    fake.decode = AsyncMock(return_value=None)
+    monkeypatch.setattr(
+        "wallet_bot.main.create_default_decoder",
+        lambda: fake,
+    )
+    return fake
+
+
 async def test_photo_runs_extraction_and_sends_keyboard(
     test_app, fake_client, patched_vision
 ) -> None:

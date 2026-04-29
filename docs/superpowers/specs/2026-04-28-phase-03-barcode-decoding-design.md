@@ -1,4 +1,9 @@
-# Phase 03 — Barcode decoding design
+> **Superseded (2026-04-29):** This design used Gemini to read barcodes visually.
+> E2E testing showed inaccurate results (visual OCR on pixel matrices).
+> See [`features/barcode-extraction/`](../../../features/barcode-extraction/CLAUDE.md)
+> for the current `zxing-cpp` approach. This file is retained for history only.
+
+# Phase 03 — Barcode decoding design (original — superseded)
 _Date: 2026-04-28_
 
 ## Context
