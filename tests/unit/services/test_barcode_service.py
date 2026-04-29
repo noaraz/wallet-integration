@@ -1,4 +1,4 @@
-"""Unit tests for ZxingBarcodeDecoder — zxing_cpp is mocked throughout."""
+"""Unit tests for ZxingBarcodeDecoder — zxingcpp is mocked throughout."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ class TestZxingBarcodeDecoder:
         decoder = ZxingBarcodeDecoder()
         zxing_result = _make_zxing_result("QRCode", "https://ticket.example/abc123")
         with (
-            patch("wallet_bot.services.barcode_service.zxing_cpp") as mock_zxing,
+            patch("wallet_bot.services.barcode_service.zxingcpp") as mock_zxing,
             patch("wallet_bot.services.barcode_service.Image"),
         ):
             mock_zxing.read_barcodes.return_value = [zxing_result]
@@ -34,7 +34,7 @@ class TestZxingBarcodeDecoder:
     async def test_decode_returns_none_when_no_barcodes_found(self) -> None:
         decoder = ZxingBarcodeDecoder()
         with (
-            patch("wallet_bot.services.barcode_service.zxing_cpp") as mock_zxing,
+            patch("wallet_bot.services.barcode_service.zxingcpp") as mock_zxing,
             patch("wallet_bot.services.barcode_service.Image"),
         ):
             mock_zxing.read_barcodes.return_value = []
@@ -46,7 +46,7 @@ class TestZxingBarcodeDecoder:
         decoder = ZxingBarcodeDecoder()
         zxing_result = _make_zxing_result("Code128", "1234567890")
         with (
-            patch("wallet_bot.services.barcode_service.zxing_cpp") as mock_zxing,
+            patch("wallet_bot.services.barcode_service.zxingcpp") as mock_zxing,
             patch("wallet_bot.services.barcode_service.Image"),
         ):
             mock_zxing.read_barcodes.return_value = [zxing_result]
@@ -59,7 +59,7 @@ class TestZxingBarcodeDecoder:
         decoder = ZxingBarcodeDecoder()
         zxing_result = _make_zxing_result("Aztec", "payload")
         with (
-            patch("wallet_bot.services.barcode_service.zxing_cpp") as mock_zxing,
+            patch("wallet_bot.services.barcode_service.zxingcpp") as mock_zxing,
             patch("wallet_bot.services.barcode_service.Image"),
         ):
             mock_zxing.read_barcodes.return_value = [zxing_result]
@@ -72,7 +72,7 @@ class TestZxingBarcodeDecoder:
         decoder = ZxingBarcodeDecoder()
         zxing_result = _make_zxing_result("QRCode", "")
         with (
-            patch("wallet_bot.services.barcode_service.zxing_cpp") as mock_zxing,
+            patch("wallet_bot.services.barcode_service.zxingcpp") as mock_zxing,
             patch("wallet_bot.services.barcode_service.Image"),
         ):
             mock_zxing.read_barcodes.return_value = [zxing_result]
@@ -85,7 +85,7 @@ class TestZxingBarcodeDecoder:
         decoder = ZxingBarcodeDecoder()
         zxing_result = _make_zxing_result("SomeExoticFormat", "value")
         with (
-            patch("wallet_bot.services.barcode_service.zxing_cpp") as mock_zxing,
+            patch("wallet_bot.services.barcode_service.zxingcpp") as mock_zxing,
             patch("wallet_bot.services.barcode_service.Image"),
         ):
             mock_zxing.read_barcodes.return_value = [zxing_result]
@@ -99,7 +99,7 @@ class TestZxingBarcodeDecoder:
         first = _make_zxing_result("QRCode", "first-payload")
         second = _make_zxing_result("Code128", "second-payload")
         with (
-            patch("wallet_bot.services.barcode_service.zxing_cpp") as mock_zxing,
+            patch("wallet_bot.services.barcode_service.zxingcpp") as mock_zxing,
             patch("wallet_bot.services.barcode_service.Image"),
         ):
             mock_zxing.read_barcodes.return_value = [first, second]
@@ -107,6 +107,14 @@ class TestZxingBarcodeDecoder:
 
         assert result is not None
         assert result.barcode_value == "first-payload"
+
+    async def test_decode_returns_none_on_corrupt_image(self) -> None:
+        decoder = ZxingBarcodeDecoder()
+        with patch("wallet_bot.services.barcode_service.Image") as mock_image:
+            mock_image.open.side_effect = Exception("cannot identify image file")
+            result = await decoder.decode(b"not an image")
+
+        assert result is None
 
     def test_protocol_satisfied(self) -> None:
         decoder = ZxingBarcodeDecoder()

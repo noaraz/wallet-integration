@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -80,8 +80,8 @@ def patched_vision(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def patched_decoder(monkeypatch):
-    """Patch the barcode-decoder factory so webhook tests never call zxing_cpp."""
-    fake = AsyncMock()
+    """Patch the barcode-decoder factory so webhook tests never call zxingcpp."""
+    fake = MagicMock()
     fake.decode = AsyncMock(return_value=None)
     monkeypatch.setattr(
         "wallet_bot.main.create_default_decoder",

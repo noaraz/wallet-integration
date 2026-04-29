@@ -13,20 +13,17 @@ from __future__ import annotations
 
 import asyncio
 import io
-from typing import TYPE_CHECKING, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from wallet_bot.models.ticket import BarcodeResult
 
-if TYPE_CHECKING:
-    pass
-
-# Lazy imports inside _decode_sync so unit tests can mock at module level
-# without requiring zxing_cpp or Pillow installed on the host.
+# Module-level try/except so unit tests can mock zxingcpp and Image
+# at the module level without requiring the libraries installed on the host.
 try:
-    import zxing_cpp
+    import zxingcpp
     from PIL import Image
 except ImportError:  # pragma: no cover
-    zxing_cpp = None  # type: ignore[assignment]
+    zxingcpp = None  # type: ignore[assignment]
     Image = None  # type: ignore[assignment]
 
 _ZXING_FORMAT_MAP: dict[str, str] = {
@@ -55,8 +52,11 @@ class ZxingBarcodeDecoder:
         return await asyncio.to_thread(self._decode_sync, image_bytes)
 
     def _decode_sync(self, image_bytes: bytes) -> BarcodeResult | None:
-        img = Image.open(io.BytesIO(image_bytes))
-        results = zxing_cpp.read_barcodes(img)
+        try:
+            with Image.open(io.BytesIO(image_bytes)) as img:
+                results = zxingcpp.read_barcodes(img)
+        except Exception:
+            return None
         if not results:
             return None
         r = results[0]
