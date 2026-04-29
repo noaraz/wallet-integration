@@ -1,10 +1,10 @@
 # STATUS.md — Progress Tracker
 
-Last updated: 2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (Google Wallet pass).
+Last updated: 2026-04-29 — Phase 04 merged ✅ (PR #5). Next focus: Phase 03 revision (pyzbar barcode decoding).
 
 ## Current Focus
 
-**Phase 04 — Google Wallet pass** — not started. Brainstorm via `/superpowers:brainstorming` in a new session. Phase 03 shipped barcode extraction via Gemini Vision with 134 unit tests green (16 new tests added).
+**Phase 03 revision — replace Gemini barcode extraction with `pyzbar`** — ⬜ not started. Start with `/superpowers:brainstorming` in a new session.
 
 ---
 
@@ -16,7 +16,7 @@ Last updated: 2026-04-28 — Phase 03 merged ✅ (PR #4). Next focus: Phase 04 (
 | 01 | Telegram webhook | ✅ done |
 | 02 | Vision extraction | ✅ done |
 | 03 | Barcode decoding | ✅ done |
-| 04 | Google Wallet pass | ⬜ not started |
+| 04 | Google Wallet pass | ✅ done |
 | 05 | End-to-end flow | ⬜ not started |
 | 06 | Observability & hardening | ⬜ not started |
 | 07 | Release pipeline | ⬜ not started |
@@ -25,7 +25,26 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 
 ---
 
-## Phase 03 — Barcode decoding ✅
+## Phase 04 — Google Wallet pass ✅
+
+| Task | Status |
+|------|--------|
+| `google-auth` + `google-auth-httplib2` dependencies | ✅ |
+| `models/wallet.py` — `WalletObject`, `PassBundle` | ✅ |
+| `config.py` — `wallet_issuer_id`, `wallet_sa_json`, `wallet_origins` | ✅ |
+| `models/callback_ids.py` — `WALLET_GET_LINK`, `WALLET_BUNDLE_YES`, `WALLET_BUNDLE_NO` | ✅ |
+| `services/pass_store.py` — in-memory per-chat bundle tracker | ✅ |
+| `services/wallet_service.py` — object builder + RS256 JWT signer | ✅ |
+| `services/telegram_client.py` — `send_url_button` | ✅ |
+| `handlers/callback_handler.py` — full multi-ticket bundle flow | ✅ |
+| `handlers/start_handler.py` + `help_handler.py` — multi-ticket UX explained | ✅ |
+| `main.py` — `PassStore` + `WalletService` wired via FastAPI DI | ✅ |
+| 175 tests green, ruff lint clean | ✅ |
+| JWT structure validated by `wallet-jwt-validator` agent | ✅ |
+| PR opened + merged | ✅ |
+| `wallet-pass-preview` skill created via `/superpowers:writing-skills` | ⬜ deferred |
+
+## Phase 03 — Barcode decoding ✅ (revision pending)
 
 | Task | Status |
 |------|--------|
@@ -36,6 +55,9 @@ Legend: ✅ done · 🔄 in progress · ⬜ not started
 | Design doc + `phases/03-barcode-decode/plan.md` updated | ✅ |
 | `STATUS.md` updated, current focus → Phase 04 | ✅ |
 | PR #4 merged to main | ✅ |
+| **Revision needed:** replace Gemini barcode extraction with `pyzbar` | ⬜ |
+
+> **Why:** E2E testing showed Gemini reads QR code values inaccurately (visual OCR on binary pixel matrix). `pyzbar` decodes the exact binary payload reliably. Gemini should own human-readable text fields only; `pyzbar` should own `barcode_value` + `barcode_type`. Remove barcode instructions from the Gemini prompt.
 
 ## Phase 02 — Vision extraction ✅
 

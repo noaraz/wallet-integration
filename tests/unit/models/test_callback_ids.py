@@ -55,3 +55,9 @@ class TestParseCallbackId:
     def test_non_string_rejected(self) -> None:
         assert parse_callback_id(None) is None  # type: ignore[arg-type]
         assert parse_callback_id(123) is None  # type: ignore[arg-type]
+
+
+def test_wallet_callback_ids_are_whitelisted() -> None:
+    assert parse_callback_id("wallet_get_link") is CallbackId.WALLET_GET_LINK
+    assert parse_callback_id("wallet_bundle_yes") is CallbackId.WALLET_BUNDLE_YES
+    assert parse_callback_id("wallet_bundle_no") is CallbackId.WALLET_BUNDLE_NO

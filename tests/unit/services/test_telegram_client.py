@@ -145,3 +145,12 @@ async def test_download_photo_bytes_returns_bytes_and_mime() -> None:
     assert data == b"\x89PNG fake"
     assert mime == "image/jpeg"  # Telegram sends PhotoSize as JPEG
     bot.get_file.assert_called_once_with(file_id="ABC")
+
+
+async def test_fake_client_records_url_button() -> None:
+    """FakeClient.send_url_button appends to sent_url_buttons."""
+    from tests.conftest import FakeClient
+
+    client = FakeClient()
+    await client.send_url_button(42, "Ready!", "Add to Wallet", "https://pay.google.com/x")
+    assert client.sent_url_buttons == [(42, "Ready!", "Add to Wallet", "https://pay.google.com/x")]

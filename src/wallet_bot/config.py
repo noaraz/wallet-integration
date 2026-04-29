@@ -20,8 +20,9 @@ def _split_ids(raw: str) -> list[int]:
 
 
 class _EnvWithCommaIds(EnvSettingsSource):
-    """EnvSettingsSource that treats ALLOWED_TG_USER_IDS as a plain string,
-    bypassing pydantic-settings' JSON-decode for list fields."""
+    """EnvSettingsSource that handles comma-separated list env vars
+    (ALLOWED_TG_USER_IDS, WALLET_ORIGINS) as plain strings, bypassing
+    pydantic-settings' JSON-decode for list fields."""
 
     def prepare_field_value(
         self,
@@ -34,6 +35,8 @@ class _EnvWithCommaIds(EnvSettingsSource):
             # Return the parsed list (possibly empty); field_validator below
             # will raise ValidationError for the empty case.
             return _split_ids(value)
+        if field_name == "wallet_origins" and isinstance(value, str):
+            return [x.strip() for x in value.split(",") if x.strip()]
         return super().prepare_field_value(field_name, field, value, value_is_complex)
 
 
@@ -45,6 +48,9 @@ class Settings(BaseSettings):
     gemini_model: str = (
         "gemini-2.5-flash"  # env: GEMINI_MODEL — override to ride out capacity outages
     )
+    wallet_issuer_id: str = ""  # env: WALLET_ISSUER_ID
+    wallet_sa_json: SecretStr | None = None  # env: WALLET_SA_JSON (full SA JSON; local dev only)
+    wallet_origins: list[str] = []  # env: WALLET_ORIGINS (comma-separated)
 
     @field_validator("allowed_tg_user_ids")
     @classmethod

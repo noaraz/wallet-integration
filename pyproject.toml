@@ -9,6 +9,9 @@ dependencies = [
     "python-telegram-bot>=21.0,<22",
     "pydantic-settings>=2.0",
     "google-genai>=0.3",
+    "google-auth>=2.29",
+    "google-auth-httplib2>=0.2",
+    "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
@@ -17,7 +20,6 @@ dev = [
     "pytest-asyncio>=0.23",
     "pytest-cov>=5",
     "ruff>=0.5",
-    "httpx>=0.27",
     "asgi-lifespan>=2.1",
 ]
 # eval: throwaway benchmarking tools — not installed in prod, not required for tests.

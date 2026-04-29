@@ -1,8 +1,8 @@
 """FastAPI application — webhook handler and DI wiring.
 
-Wires the Phase-02 routes:
+Routes:
 
-* ``/start``, ``/help`` — Phase-01 commands (unchanged)
+* ``/start``, ``/help`` — slash commands
 * Photo in a private chat → download → Gemini Vision → editable draft
 * ``callback_query`` (inline-button tap) → :func:`handle_callback`
 * Text in private chat while a draft is in edit-mode → :func:`handle_edit_reply`
@@ -33,11 +33,13 @@ from wallet_bot.handlers.help_handler import handle_help
 from wallet_bot.handlers.photo_handler import handle_photo
 from wallet_bot.handlers.start_handler import handle_start
 from wallet_bot.services.draft_store import DraftStore, get_default_store
+from wallet_bot.services.pass_store import PassStore
 from wallet_bot.services.telegram_client import TelegramClient, TelegramClientProtocol
 from wallet_bot.services.vision_service import (
     VisionServiceProtocol,
     create_default_service,
 )
+from wallet_bot.services.wallet_service import WalletService
 
 # Default to INFO so handler logs are visible in `docker compose` output.
 # basicConfig is a no-op if logging was already configured (e.g. in tests).
@@ -57,6 +59,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     app.state.bot = bot
     app.state.telegram_client = TelegramClient(bot)
     app.state.draft_store = get_default_store()
+    app.state.pass_store = PassStore()
+    sa_json = settings.wallet_sa_json
+    if sa_json and settings.wallet_issuer_id:
+        app.state.wallet_service = WalletService(
+            issuer_id=settings.wallet_issuer_id,
+            sa_json=sa_json.get_secret_value(),
+            origins=settings.wallet_origins,
+        )
+    else:
+        app.state.wallet_service = None
     # Lazily built on first webhook call so tests can monkey-patch
     # ``create_default_service`` *after* startup.
     app.state.vision_service = None
@@ -72,6 +84,14 @@ def get_client(request: Request) -> TelegramClientProtocol:
 
 def get_store(request: Request) -> DraftStore:
     return request.app.state.draft_store  # type: ignore[no-any-return]
+
+
+def get_pass_store(request: Request) -> PassStore:
+    return request.app.state.pass_store  # type: ignore[no-any-return]
+
+
+def get_wallet_service(request: Request) -> WalletService | None:
+    return request.app.state.wallet_service  # type: ignore[no-any-return]
 
 
 def get_vision(request: Request, settings: Settings) -> VisionServiceProtocol:
@@ -104,6 +124,8 @@ async def webhook(
     settings: Settings = Depends(get_settings),
     client: TelegramClientProtocol = Depends(get_client),
     store: DraftStore = Depends(get_store),
+    pass_store: PassStore = Depends(get_pass_store),
+    wallet_service: WalletService | None = Depends(get_wallet_service),
 ) -> dict[str, str]:
     expected = settings.webhook_secret.get_secret_value()
     received = x_telegram_bot_api_secret_token or ""
@@ -142,6 +164,8 @@ async def webhook(
             callback_query_id=cbq.id,
             callback_data=cbq.data or "",
             store=store,
+            pass_store=pass_store,
+            wallet_service=wallet_service,
         )
         return {"ok": "true"}
 
